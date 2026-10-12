@@ -554,6 +554,21 @@
     t.innerHTML = d.replace(/<\/(p|li|h3)>|<br>/gi, ' ');
     return t.textContent.replace(/\s+/g, ' ').trim();
   }
+  // "Product details": the text the admin wrote for this saree, or, when there is none, the standard facts that are
+  // true of every saree in the shop plus the weave and weaver.
+  function productDetailsHTML(p){
+    const own = descPlain(p.details || '');
+    if(own) return `<div class="pd-rich">${descHTML(p.details)}</div>`;
+    const rows = [
+      ['Blouse', 'Unstitched piece included'],
+      ['Length', '6.3m + 0.8m blouse'],
+      ['Wash', 'Dry clean only'],
+      ['Delivery', '4-7 business days'],
+      p.loomType ? ['Craft', escapeHtml(p.loomType)] : null,
+      p.weaverName ? ['Weaver', escapeHtml(p.weaverName) + (p.weaverRegion ? ', ' + escapeHtml(p.weaverRegion) : '')] : null
+    ].filter(Boolean);
+    return `<dl class="pd-specs">${rows.map(r => `<div><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`).join('')}</dl>`;
+  }
   function updateProductSEO(p, variant){
     const desc = descPlain(variant.desc || p.desc || '').slice(0, 155);
     document.getElementById('metaDescription').setAttribute('content', desc || `${p.name} (${p.fabric} saree) from Padmora by Yashi.`);
@@ -609,26 +624,27 @@
               <div class="swatch-row" id="pdSwatches"></div>
               <p class="stock-note" id="pdStockNote"></p>
             </div>
-            <div class="pd-desc" id="pdDesc"></div>
             <div id="pdPreAddQty">
               <label style="font-size:12px;color:var(--ink-soft);">Quantity</label>
               <div class="qty-stepper" style="margin-top:8px;">
                 <button id="qtyDec">−</button><span id="qtyVal">1</span><button id="qtyInc">+</button>
               </div>
             </div>
-            <div class="pd-meta">
-              <span><strong>Blouse:</strong> Unstitched piece included</span>
-              <span><strong>Length:</strong> 6.3m + 0.8m blouse</span>
-              <span><strong>Wash:</strong> Dry clean only</span>
-              <span><strong>Delivery:</strong> 4-7 business days</span>
-              ${p.loomType ? `<span><strong>Craft:</strong> ${escapeHtml(p.loomType)}</span>` : ''}
-              ${p.weaverName ? `<span><strong>Weaver:</strong> ${escapeHtml(p.weaverName)}${p.weaverRegion ? ', ' + escapeHtml(p.weaverRegion) : ''}</span>` : ''}
-            </div>
             ${occasionList(p.occasion).length ? `<div class="pd-occasions"><strong>Occasions:</strong>${occasionList(p.occasion).map(o => `<a class="occ-chip" href="/shop?occasion=${encodeURIComponent(o)}">${escapeHtml(o)}</a>`).join('')}</div>` : ''}
             <div class="pd-actions">
               <div id="pdCartControl"></div>
               <button class="btn btn-primary" id="pdBuyNow">Buy Now</button>
               <button class="btn btn-outline" id="pdWish">♡ Wishlist</button>
+            </div>
+            <div class="pd-acc-group">
+              <details class="pd-acc" id="pdDescAcc" open>
+                <summary><span>Product description</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+                <div class="pd-acc-body pd-desc" id="pdDesc"></div>
+              </details>
+              <details class="pd-acc" id="pdDetailsAcc">
+                <summary><span>Product details</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+                <div class="pd-acc-body" id="pdDetails">${productDetailsHTML(p)}</div>
+              </details>
             </div>
           </div>
         </div>
@@ -686,7 +702,9 @@
     const v = selectedVariant;
     document.getElementById('pdPrice').innerHTML = `
       <span class="price-now">${money(v.price)}</span>${priceExtrasHTML(currentProduct, v)}`;
-    document.getElementById('pdDesc').innerHTML = descHTML(v.desc || currentProduct.desc);
+    const descText = v.desc || currentProduct.desc;
+    document.getElementById('pdDesc').innerHTML = descHTML(descText);
+    document.getElementById('pdDescAcc').hidden = !descPlain(descText);   // a saree with no description simply has no empty dropdown
     document.getElementById('pdShadeLabel').textContent = ': ' + v.colorName;
     const noteEl = document.getElementById('pdStockNote');
     // Stock is not shown on the page, except "only 2 / 3 left" and "out of stock" (see stockNote in api.js).

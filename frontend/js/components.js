@@ -309,7 +309,7 @@ function initFooter() {
       <div class="container">
         <div class="footer-grid">
           <div>
-            <div class="footer-logo">Padmora</div>
+            <div class="footer-logo">Padmora Sarees</div>
             <p id="footerTagline"></p>
             <a class="footer-mail" id="footerMailLink" href="mailto:hello@padmorasarees.com">
               <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
@@ -341,10 +341,10 @@ function initFooter() {
     tagline: 'Bringing handloom weavers and heritage crafts directly to your wardrobe, one drape at a time.',
     columns: [
       { title: 'Customer Care', links: [{ label: 'Track Order', url: '/track-order' }, { label: 'Order Inquiry', url: '/order-inquiry' }, { label: 'Policies', url: '/policies' }, { label: 'FAQ', url: '/faq' }, { label: 'Contact Us', url: '/contact' }] },
-      { title: 'Company', links: [{ label: 'About Padmora', url: '/about' }] }
+      { title: 'Company', links: [{ label: 'About Padmora Sarees', url: '/about' }] }
     ],
-    bottomLeft: '© 2026 Padmora. All rights reserved.',
-    bottomRight: 'Made with care for handloom weavers across India.'
+    bottomLeft: '© 2026 Padmora Sarees. All rights reserved.',
+    bottomRight: 'Blooming with love, culture and tradition.'
   };
   function renderFooterContent(f) {
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || ''; };

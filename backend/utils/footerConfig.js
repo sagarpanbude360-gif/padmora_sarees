@@ -11,11 +11,11 @@ const DEFAULT_FOOTER = {
       { label: 'Contact Us', url: '/contact' }
     ] },
     { title: 'Company', links: [
-      { label: 'About Padmora', url: '/about' }
+      { label: 'About Padmora Sarees', url: '/about' }
     ] }
   ],
-  bottomLeft: '© 2026 Padmora. All rights reserved.',
-  bottomRight: 'Made with care for handloom weavers across India.'
+  bottomLeft: '© 2026 Padmora Sarees. All rights reserved.',
+  bottomRight: 'Blooming with love, culture and tradition.'
 };
 
 const MAX_COLUMNS = 4;

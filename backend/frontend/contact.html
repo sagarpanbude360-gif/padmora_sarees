@@ -35,10 +35,10 @@
       <div class="contact-layout">
         <div class="contact-info-card">
           <h3>Get in Touch</h3>
-          <p>📞 <span id="cPhone">…</span><br>Mon–Sat, 10am–7pm IST</p>
+          <p id="cPhoneLine">📞 <span id="cPhone">…</span><br><span id="cHours">Mon–Sat, 10am–7pm IST</span></p>
           <p>✉️ <a id="cMail" href="#" style="color:inherit;">…</a></p>
-          <p>📍 Padmora by Yashi Studio<br>Bandra West, Mumbai, Maharashtra 400050</p>
-          <p style="margin-top:20px;">Ordering 5+ sarees at once? Mention it in your message and our team will follow up with a bundle quote.</p>
+          <p id="cAddressLine">📍 <span id="cAddress">Padmora by Yashi Studio<br>Bandra West, Mumbai, Maharashtra 400050</span></p>
+          <p style="margin-top:20px;" id="cNote">Ordering 5+ sarees at once? Mention it in your message and our team will follow up with a bundle quote.</p>
         </div>
         <div>
           <div class="form-error" id="contactError"></div>
@@ -77,10 +77,20 @@
 <script src="js/components.js"></script>
 <script src="js/cursor.js"></script>
 <script>
-  // The phone number and e-mail shown here are the ones saved in Admin → Settings → Store, never typed into the page.
+  // Everything in the "Get in Touch" card is the text saved in Admin → Settings → Store Info. The words already on the page are
+  // what shows until that loads (and for any box never saved); a box saved empty hides its line.
   apiFetch('/settings/store').then(({ store }) => {
     if (store.contactPhone) document.getElementById('cPhone').textContent = store.contactPhone;
     if (store.contactEmail) { const m = document.getElementById('cMail'); m.textContent = store.contactEmail; m.href = 'mailto:' + store.contactEmail; }
+    const has = k => typeof store[k] === 'string';
+    if (has('contactHours')) { const el = document.getElementById('cHours'); el.textContent = store.contactHours; if (!store.contactHours) el.previousElementSibling && el.previousElementSibling.remove(); }
+    if (has('contactAddress')) {
+      const el = document.getElementById('cAddress');
+      el.textContent = '';
+      store.contactAddress.split('\n').forEach((line, i) => { if (i) el.appendChild(document.createElement('br')); el.appendChild(document.createTextNode(line)); });
+      if (!store.contactAddress) document.getElementById('cAddressLine').hidden = true;
+    }
+    if (has('contactNote')) { const el = document.getElementById('cNote'); el.textContent = store.contactNote; el.hidden = !store.contactNote; }
   }).catch(() => {});
 </script>
 <script>
