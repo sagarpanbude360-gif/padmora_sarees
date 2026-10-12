@@ -316,9 +316,9 @@ function sizedPhoto(url, width, quality) {
   } catch (e) { /* ignore */ }
 })();
 // width = the widest this picture is shown (CSS pixels); the screen's pixel density is allowed for.
-function photoBg(url, swatchKey, width) {
+function photoBg(url, swatchKey, width, quality) {
   const dpr = Math.min(2, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
-  const u = sizedPhoto(url, (width || 360) * dpr).replace(/'/g, '%27');
+  const u = sizedPhoto(url, (width || 360) * dpr, quality).replace(/'/g, '%27');
   return u ? `url('${u}') center/cover no-repeat, ${swatchBg(swatchKey)}` : swatchBg(swatchKey);
 }
 function productBg(p, width) { return photoBg(productPhotoUrl(p), p && p.swatch, width); }
