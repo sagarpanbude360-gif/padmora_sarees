@@ -106,17 +106,17 @@
     try{
       const {upcomingSarees} = await apiFetch('/upcoming-sarees');
       grid.innerHTML = upcomingSarees.length ? upcomingSarees.map(upcomingCardHTML).join('') :
-        `<div class="empty-state" style="grid-column:1/-1;">Nothing on the loom to announce just yet — check back soon.</div>`;
+        `<div class="empty-state" style="grid-column:1/-1;">Nothing on the loom to announce just yet. Check back soon.</div>`;
       document.querySelectorAll('[data-notify]').forEach(el=>el.addEventListener('click', ()=>openNotifyForm(el.dataset.notify, el.dataset.name)));
     }catch(e){
-      grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:var(--ink-soft);">Could not load this page — is the backend server running?</p>`;
+      grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:var(--ink-soft);">We could not load this page. Please refresh or try again in a moment.</p>`;
     }
   }
 
   function openNotifyForm(id, name){
     currentNotifyId = id;
     const user = getStoredUser();
-    document.getElementById('notifyTitle').textContent = name ? `Notify Me — ${name}` : 'Notify Me';
+    document.getElementById('notifyTitle').textContent = name ? `Notify Me: ${name}` : 'Notify Me';
     const emailField = document.getElementById('notifyEmailField');
     emailField.style.display = (isLoggedIn() && user && user.email) ? 'none' : 'block';
     document.getElementById('notifyEmail').value = '';

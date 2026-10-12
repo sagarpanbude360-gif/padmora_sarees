@@ -804,6 +804,8 @@ html.iv-open{overflow:hidden;}
 @keyframes pdAccIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
 @media (prefers-reduced-motion:reduce){.pd-acc-body{animation:none;}.pd-acc summary svg{transition:none;}}
 @media (max-width:560px){.pd-specs > div{grid-template-columns:92px 1fr;}}
+/* phone: Add to bag and Buy now share one row, Wishlist gets its own full-width row (three squeezed buttons wrapped their labels) */
+@media (max-width:560px){.pd-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}.pd-actions > *{min-width:0;}.pd-actions .btn{width:100%;white-space:nowrap;padding-left:10px;padding-right:10px;}#pd-actions-wish,.pd-actions #pdWish{grid-column:1 / -1;}.pd-actions #pdCartControl .btn,.pd-actions #pdCartControl .qty-stepper{width:100%;}.pd-actions #pdCartControl .qty-stepper{justify-content:space-between;}}
 /* Admin list tools: search, date range, sort, count, export */
 .list-tools{margin:0 0 14px;padding:12px 14px;background:#fff;border:1px solid rgba(173,59,92,0.14);border-radius:8px;}
 .lt-search{position:relative;display:flex;align-items:center;}
@@ -1115,7 +1117,7 @@ footer{background:var(--maroon-deep);color:var(--ivory-deep);padding:50px 0 0;ma
 .verified-tag{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--teal);font-weight:600;border:1px solid var(--teal);border-radius:20px;padding:2px 9px;}
 .review-card .stars{font-size:13px;}
 .review-card p{font-size:13.5px;color:var(--ink-soft);margin-top:6px;line-height:1.6;}
-.pd-occasions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);margin:-6px 0 18px;}
+.pd-occasions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);margin:16px 0 18px;}
 .pd-occasions strong{color:var(--ink);}
 .occ-chip{padding:4px 12px;border:1px solid rgba(173,59,92,0.28);border-radius:999px;font-size:12px;color:var(--maroon-deep);background:#fff;transition:background .15s,color .15s;}
 .occ-chip:hover{background:var(--maroon);color:#fff;border-color:var(--maroon);}

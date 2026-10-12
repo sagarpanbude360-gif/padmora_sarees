@@ -56,7 +56,7 @@
     }
 
     wrap.innerHTML = `
-      ${!isLoggedIn() ? `<div class="form-error show" style="background:rgba(31,75,74,0.08);color:var(--teal);">Shopping as a guest — <a href="/login?redirect=/cart" style="color:var(--teal);text-decoration:underline;">log in</a> to save your bag across devices and check out.</div>` : ''}
+      ${!isLoggedIn() ? `<div class="form-error show" style="background:rgba(31,75,74,0.08);color:var(--teal);">Shopping as a guest. <a href="/login?redirect=/cart" style="color:var(--teal);text-decoration:underline;">log in</a> to save your bag across devices and check out.</div>` : ''}
       <div class="cart-layout">
         <div>
           ${items.map((item)=>`

@@ -398,6 +398,14 @@ dbReady.then(() => {
     console.log(`Padmora by Yashi server running at http://localhost:${PORT}`);
     dataVersion.start();   // notice changes made through any other copy of the server
 
+    // Keep the home page and catalogue caches warm. Left alone they go cold after ~15 seconds without a visitor, and the next
+    // visitor would wait over a second for the database; refreshing every 10 seconds means nobody does (read-only, a few
+    // queries each time).
+    const pub = require('./utils/publicData');
+    const warmCaches = () => Promise.all([pub.bootstrap(), pub.home(), require('./utils/db').getProducts()]).catch(err => console.error('Cache warm-up failed:', err.message));
+    warmCaches();
+    setInterval(warmCaches, 10000).unref();
+
     // Background jobs — real setInterval timers on this long-running Node
     // process, not decorative. Each one is also individually safe to call
     // repeatedly (idempotent per-event, see each module's own comments), so a
