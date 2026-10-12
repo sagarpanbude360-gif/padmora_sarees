@@ -42,18 +42,16 @@
 
   /* Full-width, admin-managed hero image — one picture for desktop, an
      optional different one under 760px, the whole thing clickable with a
-     slow zoom + button invert on hover. No text of its own; the only copy is
+     button colour change on hover. No text of its own; the only copy is
      the button label, also editable from admin. */
   .home-hero{position:relative;overflow:hidden;background:linear-gradient(160deg,#7A2740 0%,#AD3B5C 45%,#D9A97C 100%);}
   .home-hero-link{display:block;position:relative;color:inherit;}
-  .home-hero-img{display:block;width:100%;height:auto;transition:transform .9s ease;}
+  .home-hero-img{display:block;width:100%;height:auto;object-fit:contain;}
   .home-hero-fallback{aspect-ratio:16/9;}
   .home-hero-link::after{content:'';position:absolute;inset:0;background:rgba(20,10,10,0.04);transition:background .4s ease;pointer-events:none;}
   .home-hero-link:hover::after,.home-hero-link:focus-visible::after{background:rgba(20,10,10,0.2);}
-  .home-hero-link:hover .home-hero-img{transform:scale(1.045);}
-  /* The hero picture is shown whole (16:9, 1672x941). The button sits in the clear space under the
-     "Aarambh / Festive Collection" wordmark on the right, and everything inside it is sized in em from one
-     font-size that follows the screen width, so it stays under the wordmark from phone to desktop. */
+  /* Keep artwork and baked-in lettering sharp: no hover zoom. */
+  /* Keep the existing button placement; leave space for it in the uploaded artwork. */
   .home-hero-btn{position:absolute;top:65%;left:78%;transform:translate(-50%,-50%);z-index:2;display:inline-flex;align-items:center;gap:1em;padding:.6em .6em .6em 1.9em;max-width:38%;font-size:clamp(7px,1.15vw,14px);background:rgba(255,240,230,0.96);color:var(--maroon-deep);font-weight:600;letter-spacing:.12em;text-transform:uppercase;border-radius:999px;box-shadow:0 0 0 .5em rgba(255,240,230,0.26),0 1em 2.4em rgba(0,0,0,0.3);transition:background .35s ease,color .35s ease,transform .35s ease,box-shadow .35s ease;white-space:nowrap;overflow:hidden;}
   .home-hero-btn > span{overflow:hidden;text-overflow:ellipsis;}
   .home-hero-btn::before{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.7),transparent);transform:skewX(-20deg);transition:left .8s ease;pointer-events:none;}
@@ -63,19 +61,13 @@
   .home-hero-link:hover .home-hero-btn::before,.home-hero-link:focus-visible .home-hero-btn::before{left:130%;}
   .home-hero-link:hover .home-hero-btn i,.home-hero-link:focus-visible .home-hero-btn i{background:var(--gold);}
   .home-hero-link:hover .home-hero-btn i svg,.home-hero-link:focus-visible .home-hero-btn i svg{transform:translateX(3px);}
-  /* On a computer or tablet the banner is half as tall as the whole picture (32:9 instead of 16:9), so the Shop by Weave row is
-     already on the first screen. The picture fills the strip and keeps its middle-upper part in view - the wordmark, the button
-     and the sarees; the button sits just under the wordmark. Phones are unchanged (the picture is already short there). */
+  /* Use the uploaded picture's own proportions at every width. No forced crop or enlargement. */
+  .home-hero-link picture{display:block;}
   @media (min-width:761px){
-    .home-hero-link,.home-hero-fallback{aspect-ratio:32/9;}
-    .home-hero-link{overflow:hidden;}
-    .home-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--hx,50%) var(--hy,25%);}
+    .home-hero-fallback{aspect-ratio:32/9;}
     .home-hero-btn{top:82%;left:85%;}
   }
-  /* Phones: the banner is never shorter than about half the screen width - a very wide picture is trimmed at the sides to fill that
-     (the admin chooses which side stays in view, Storefront -> Hero); a taller picture keeps its own height. */
   @media (max-width:760px){
-    .home-hero-img{min-height:52vw;object-fit:cover;object-position:var(--hmx,75%) 50%;}
     .home-hero-fallback{aspect-ratio:100/52;}
   }
   @media (prefers-reduced-motion:reduce){
@@ -232,15 +224,10 @@
     const link = escAttr(h.ctaLink || '/shop');
     const label = escAttr(h.ctaText || 'Shop All Sarees');
     const reserved = section.offsetHeight;
-    // which part of the picture stays in view in the half-height banner (set with the preview in Admin -> Storefront -> Hero)
-    const focus = (v, d) => { const n = Number(v); return v !== '' && v != null && Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : d; };
-    const focusStyle = `--hx:${focus(h.focusX, 50)}%;--hy:${focus(h.focusY, 25)}%;--hmx:${focus(h.mobileFocusX, 75)}%;`;
-    // The banner is the biggest picture on the site, so it is fetched at the width this screen really needs (screen width times its pixel
-    // density, rounded up to a step), not at one fixed size: a fixed 1600 px copy looked soft on wide or sharp (retina) screens.
-    const need = Math.max(window.innerWidth || 0, 320) * Math.min(2, window.devicePixelRatio || 1);
-    const deskW = Math.min(2400, Math.max(1600, Math.ceil(need / 400) * 400)), mobW = Math.min(1500, Math.max(750, Math.ceil(need / 300) * 300));
+    // Serve the uploaded hero directly: a second lossy resize softens lettering and can upscale small originals.
+    // <picture> lets the browser switch sources when the viewport changes, without a stale JS width calculation.
     const media = desktop
-      ? `<picture><source media="(max-width:760px)" srcset="${escAttr(sizedPhoto(h.mobileImage || desktop, mobW, 82))}"><img class="home-hero-img" style="${focusStyle}" src="${escAttr(sizedPhoto(desktop, deskW, 82))}" alt="${escAttr(h.altText || 'Padmora sarees')}" fetchpriority="high" decoding="async"></picture>`
+      ? `<picture><source media="(max-width:760px)" srcset="${escAttr(h.mobileImage || desktop)}"><img class="home-hero-img" src="${escAttr(desktop)}" alt="${escAttr(h.altText || 'Padmora sarees')}" fetchpriority="high" decoding="async"></picture>`
       : `<div class="home-hero-fallback"></div>`;
     section.innerHTML = `<a class="home-hero-link" href="${link}" aria-label="${label}">${media}<span class="home-hero-btn"><span>${label}</span><i><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></span></a>`;
     section.style.display = '';
