@@ -25,3 +25,7 @@ collection pictures in Catalog > Collections; product photos in each colour's me
 Note: the hint text in the admin hero form says "2400 x 1000" for desktop and "1080 x 1350" for phone. The desktop banner is actually
 a 32:9 strip (2560 x 720 fits it exactly), so 2400 x 1000 gets trimmed top and bottom. The 1080 x 1350 phone suggestion gives a tall banner
 (about 469 px high at 375 px wide); use about 1080 x 562 for a short one.
+
+Upload note (fixed 12 Oct 2026): the admin used to shrink every uploaded picture to 1600 px on its long side, which made a 2400 px banner look
+soft. The homepage banner now keeps up to 2560 px (collection banners 2400 px) at higher quality, and the page asks for the width the visitor's
+screen needs. A banner uploaded before this change is stored at 1600 px, so upload it again from the original file.
