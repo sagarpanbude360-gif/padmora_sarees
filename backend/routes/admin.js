@@ -88,6 +88,7 @@ function uploadChecked(validate) {
       try { req.file.publicUrl = await saveUpload(req.file); }
       catch (e) {
         console.error('Upload could not be stored:', e);
+        if (e.badType) return res.status(400).json({ message: e.message });
         return res.status(502).json({ message: 'The file could not be saved. Please try again in a moment.' });
       }
     }
@@ -296,7 +297,7 @@ router.get('/products/:id(\\d{1,9})', asyncRoute(async (req, res) => {
 }));
 
 router.post('/products', asyncRoute(async (req, res) => {
-  const { name: rawName, fabric: rawFabric, occasion: rawOccasion, price, mrp, salePercent, badge, swatch, desc, stock: rawStock, weaverName, weaverRegion, loomType,
+  const { name: rawName, fabric: rawFabric, occasion: rawOccasion, price, mrp, salePercent, badge, swatch, desc, details, stock: rawStock, weaverName, weaverRegion, loomType,
           colorName: rawColor, lowStockThreshold: rawLow, colors, costPrice } = req.body;
   const name = cleanText(rawName, 120), fabric = cleanText(rawFabric, 80), occasion = normalizeOccasions(rawOccasion);
   const hasCost = costPrice !== undefined && costPrice !== null && String(costPrice).trim() !== '';
@@ -343,6 +344,8 @@ router.post('/products', asyncRoute(async (req, res) => {
     p_color_name: colorName, p_sku: uniqueSku(id, colorName, taken)
   });
   if (rpc.error) throw new Error(rpc.error.message);
+  const detailsText = sanitizeRich(details);
+  if (detailsText) must(await supabase.from('products').update({ details: detailsText }).eq('id', id), 'createProduct:details');
   // The extra colours go in with one insert, and the first colour's low-stock alert is set at the same time.
   const writes = [];
   const firstColumns = { ...(low !== 10 ? { low_stock_threshold: low } : {}), ...(prices.cols || {}) };
@@ -366,7 +369,7 @@ router.put('/products/:id(\\d{1,9})', asyncRoute(async (req, res) => {
   const existing = must(await supabase.from('products').select('*').eq('id', id).maybeSingle(), 'updateProduct:lookup');
   if (!existing) return res.status(404).json({ message: 'Product not found.' });
 
-  const { name, fabric, occasion, badge, desc, weaverName, weaverRegion, loomType, status } = req.body;
+  const { name, fabric, occasion, badge, desc, details, weaverName, weaverRegion, loomType, status } = req.body;
   const occasionText = occasion === undefined ? undefined : normalizeOccasions(occasion);
   if (occasion !== undefined && !occasionText) return res.status(400).json({ message: 'Choose at least one occasion (up to 8).' });
   if (name !== undefined && !cleanText(name, 120)) return res.status(400).json({ message: 'Name can\'t be blank (up to 120 characters).' });
@@ -374,7 +377,8 @@ router.put('/products/:id(\\d{1,9})', asyncRoute(async (req, res) => {
     name: name !== undefined ? name.trim() : existing.name, fabric: fabric ?? existing.fabric, occasion: occasionText ?? existing.occasion,
     badge: badge !== undefined ? badge : existing.badge, description: desc === undefined || desc === null ? existing.description : sanitizeRich(desc),
     weaver_name: weaverName ?? existing.weaver_name, weaver_region: weaverRegion ?? existing.weaver_region,
-    loom_type: loomType ?? existing.loom_type, status: status ?? existing.status ?? 'active'
+    loom_type: loomType ?? existing.loom_type, status: status ?? existing.status ?? 'active',
+    ...(details === undefined || details === null ? {} : { details: sanitizeRich(details) })
   }).eq('id', id), 'updateProduct:update');
   // The storefront shows a colour's own description when it has one, and the first colour is created with a copy
   // of the product description. So when the product description is edited, every colour that still carries the
@@ -1784,8 +1788,11 @@ router.get('/settings/store', asyncRoute(async (req, res) => {
   res.json({ store: await getSetting('store_info', {}) });
 }));
 
+const cleanContactText = (v, max, multiline) => String(v == null ? '' : v).replace(/<[^>]*>/g, '').replace(/[<>]/g, '').replace(/\r/g, '')
+  .replace(multiline ? /[ \t]+\n/g : /\s*\n\s*/g, multiline ? '\n' : ' ').trim().slice(0, max);
+
 router.put('/settings/store', asyncRoute(async (req, res) => {
-  const { brandName, logoUrl, faviconUrl, contactEmail, contactPhone, whatsapp, instagram, youtube, shipperAddress } = req.body || {};
+  const { brandName, logoUrl, faviconUrl, contactEmail, contactPhone, whatsapp, instagram, youtube, shipperAddress, contactHours, contactAddress, contactNote } = req.body || {};
   if (!brandName || !String(brandName).trim()) {
     return res.status(400).json({ message: 'Brand name is required.' });
   }
@@ -1798,7 +1805,11 @@ router.put('/settings/store', asyncRoute(async (req, res) => {
     logoUrl: logoUrl || '', faviconUrl: faviconUrl || '',
     contactEmail: contactEmail || '', contactPhone: contactPhone || '',
     whatsapp: whatsapp || '', instagram: instagram || '', youtube: youtube || '',
-    shipperAddress: String(shipperAddress || '').replace(/\r/g, '').trim().slice(0, 400)
+    shipperAddress: String(shipperAddress || '').replace(/\r/g, '').trim().slice(0, 400),
+    // shown on the Contact Us page (plain text; an empty box hides that line)
+    contactHours: cleanContactText(contactHours, 80, false),
+    contactAddress: cleanContactText(contactAddress, 240, true),
+    contactNote: cleanContactText(contactNote, 300, false)
   };
   await setSetting('store_info', next);
   await record(req, 'settings updated', 'store_info', null, before, next);
@@ -2460,7 +2471,7 @@ router.post('/upcoming-sarees/:id(\\d{1,9})/notify', asyncRoute(async (req, res)
       subject: `${entry.name} is here!`,
       html: `<div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;">
         <h2 style="color:#7A1F2B;">Good news, ${row.name || 'there'}!</h2>
-        <p>You asked to be told when <strong>${entry.name}</strong> launched — it's live now.</p>
+        <p>You asked to be told when <strong>${entry.name}</strong> launched. It's live now.</p>
         <p><a href="${process.env.SITE_URL || 'https://padmorasarees.com'}/shop" style="color:#7A1F2B;font-weight:bold;">Shop now →</a></p>
       </div>`
     });
@@ -2945,7 +2956,7 @@ router.post('/admin-users', asyncRoute(async (req, res) => {
   const { name, email, password, role } = req.body;
   if (!name || !email || !password || !role) return res.status(400).json({ message: 'Name, email, password and role are all required.' });
   if (!ADMIN_ROLES.includes(role)) return res.status(400).json({ message: 'Unknown role.' });
-  if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+  if (String(password).length < 12) return res.status(400).json({ message: 'Password must be at least 12 characters (a few words, with a number or symbol, is easy to remember and hard to guess).' });
 
   const exists = must(await supabase.from('admin_users').select('id').ilike('email', email).maybeSingle(), 'addAdminUser:lookup');
   if (exists) return res.status(409).json({ message: 'An admin account with this email already exists.' });

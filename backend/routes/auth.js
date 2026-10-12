@@ -7,6 +7,7 @@ const { requireAuth } = require('../middleware/auth');
 const { sendEmail } = require('../utils/notify');
 const { isBlocked, recordFailure, clearFailures, clientIp } = require('../utils/attemptLimiter');
 const { createOtp, verifyOtp } = require('../utils/otp');
+const { jwtSecret } = require('../utils/secrets');
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ const router = express.Router();
 
 // tokenVersion is embedded so a sign-out-everywhere style bump can invalidate older tokens - see middleware/auth.js.
 function signToken(userId, tokenVersion) {
-  return jwt.sign({ userId, tv: tokenVersion || 0 }, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '7d' });
+  return jwt.sign({ userId, tv: tokenVersion || 0 }, jwtSecret(), { algorithm: 'HS256', expiresIn: '7d' });
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;   // used for logging in (an account that already exists keeps working)
@@ -78,7 +79,7 @@ async function emailCode({ to, code, purpose, name }) {
     <p>Hi ${first.replace(/[<>&]/g, '')},</p>
     <p>Use this code to ${what}:</p>
     <p style="font-size:32px;font-weight:700;letter-spacing:8px;color:#7A1F2B;margin:18px 0;">${code}</p>
-    <p style="font-size:13px;color:#6f5a5c;">It works for 10 minutes and only once. If you did not ask for it, you can ignore this e-mail &mdash; nobody can sign in without it.</p>
+    <p style="font-size:13px;color:#6f5a5c;">It works for 10 minutes and only once. If you did not ask for it, you can ignore this e-mail. Nobody can sign in without it.</p>
   </div>`;
   const result = await sendEmail({ to, subject, html, text: `Your Padmora code is ${code}. It works for 10 minutes. If you did not ask for it, ignore this e-mail.` });
   if (result.status === 'sent') return null;
@@ -93,7 +94,7 @@ router.post('/register/start', async (req, res) => {
   try {
     const { name, email, phone, countryCode } = req.body || {};
     const cleanName = String(name || '').trim();
-    if (cleanName.length < 2 || cleanName.length > 80) return res.status(400).json({ message: 'Enter your full name.' });
+    if (cleanName.length < 2 || cleanName.length > 80 || /[<>]/.test(cleanName)) return res.status(400).json({ message: 'Enter your full name (letters, spaces and common punctuation only).' });
     if (!isValidEmail(email)) return res.status(400).json({ message: 'Enter a valid email address, for example name@example.com.' });
     if (!normalizePhone(phone, countryCode)) return res.status(400).json({ message: String(countryCode || '91').replace(/\D/g, '') === '91' ? 'Enter a valid 10-digit Indian mobile number.' : 'Enter a valid mobile number for the country you chose.' });
 
@@ -105,7 +106,7 @@ router.post('/register/start', async (req, res) => {
     const cleanEmail = String(email).trim();
     const exists = must(await supabase.from('users').select('id, is_guest, status').ilike('email', cleanEmail).maybeSingle(), 'registerStart:lookup');
     if (exists && !exists.is_guest) {
-      return res.status(409).json({ message: 'An account with this email already exists. Log in — we will e-mail you a code.', exists: true });
+      return res.status(409).json({ message: 'An account with this email already exists. Log in and we will e-mail you a code.', exists: true });
     }
     const code = await createOtp(cleanEmail, 'register');
     if (!code) return res.status(429).json({ message: 'A code was just sent. Please wait a minute before asking for another.' });
@@ -123,7 +124,7 @@ router.post('/register/verify', async (req, res) => {
     const { name, email, phone, code, countryCode } = req.body || {};
     const cleanName = String(name || '').trim();
     const cleanPhone = normalizePhone(phone, countryCode);
-    if (cleanName.length < 2 || !isValidEmail(email) || !cleanPhone || !String(code || '').trim()) {
+    if (cleanName.length < 2 || cleanName.length > 80 || /[<>]/.test(cleanName) || !isValidEmail(email) || !cleanPhone || !String(code || '').trim()) {
       return res.status(400).json({ message: 'Name, email, mobile number and code are all required.' });
     }
     const cleanEmail = String(email).trim();

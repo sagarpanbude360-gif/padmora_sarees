@@ -8,7 +8,7 @@ const { computeStatus, buildTimeline, isCancellable, CANCEL_REASONS } = require(
 const { getInquiryState, summarizeStatus } = require('../utils/inquiry');
 const { loadRefundsByOrder } = require('../utils/refunds');
 const { inquiryToken } = require('../utils/inquiryToken');
-const { isBlocked, recordFailure } = require('../utils/attemptLimiter');
+const { isBlocked, recordFailure, clientIp, hit: rateHit } = require('../utils/attemptLimiter');
 
 const router = express.Router();
 
@@ -18,7 +18,15 @@ class OrderError extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
 
-async function shapeOrder(order) {
+// A guest who looks an order up with only its Order ID plus an e-mail or phone must not be handed the full delivery address and phone
+// (anyone who knows or guesses that pair would get a stranger's home address). `mask` gives just enough to recognise the order.
+function maskedAddress(order) {
+  const first = String(order.address_name || '').trim().split(/\s+/)[0] || '';
+  const pin = String(order.address_pincode || '');
+  return { name: first, line1: '', city: order.address_city, state: order.address_state, pincode: pin ? pin.slice(0, 3) + '***' : '', phone: '' };
+}
+
+async function shapeOrder(order, opts = {}) {
   const items = must(await supabase.from('order_items').select('*').eq('order_id', order.id), 'shapeOrder:items');
   const imageByVariant = await getPrimaryImagesByVariantIds(items.map(li => li.variant_id));
   const status = await computeStatus(order); // may stamp delivered_at as a side effect — must run before reading it below
@@ -53,7 +61,7 @@ async function shapeOrder(order) {
     taxAmount: order.tax_amount,
     total: order.total,
     couponCode: order.coupon_code,
-    address: {
+    address: opts.mask ? maskedAddress(order) : {
       name: order.address_name, line1: order.address_line1, city: order.address_city,
       state: order.address_state, pincode: order.address_pincode, phone: order.address_phone
     },
@@ -107,7 +115,7 @@ async function resolvePricedLineItems(rawItems) {
     const price = variant ? variant.price : product.price;
     const colorLabel = variant ? variant.color_name : item.color;
     if (stock < item.qty) {
-      throw new OrderError(409, `Only ${stock} left of "${product.name}"${variant ? ' in ' + variant.color_name : ''} — please update your bag.`);
+      throw new OrderError(409, `Only ${stock} left of "${product.name}"${variant ? ' in ' + variant.color_name : ''} . Please update your bag.`);
     }
     lineItems.push({ productId: item.product_id, variantId: item.variant_id || null, name: product.name, color: colorLabel, qty: item.qty, price });
   }
@@ -188,24 +196,32 @@ async function findOrCreateGuestUser({ email, name, phone }) {
 // Guest order tracking — no account needed, but requires knowing both the
 // order ID and the email or phone used at checkout, the same "prove you
 // placed it" pattern most retailers use for guest order lookup.
+const GUEST_NOT_FOUND = { message: 'Order not found. Check your Order ID and the email or phone used at checkout.' };
 router.get('/guest/:id', async (req, res) => {
   try {
     const { contact } = req.query;
-    if (!contact) return res.status(400).json({ message: 'Enter the email or phone used for this order.' });
+    if (!contact || String(contact).length > 120) return res.status(400).json({ message: 'Enter the email or phone used for this order.' });
+    // limits: wrong guesses are counted per visitor and per order (so one order cannot be ground down from many addresses either),
+    // and every lookup counts toward a ceiling per visitor
+    const ip = clientIp(req);
+    const ipFails = 'guest-track:fail:ip:' + ip, ipAll = 'guest-track:all:ip:' + ip;
+    const orderKey = 'guest-track:fail:order:' + String(req.params.id || '').trim().replace(/^#/, '').toUpperCase();
+    if (isBlocked(ipFails, 12) || isBlocked(orderKey, 10) || rateHit(ipAll, 80, 15 * 60 * 1000).blocked) {
+      return res.status(429).json({ message: 'Too many attempts. Please wait a few minutes and try again, or contact us for help.' });
+    }
+    const miss = () => { recordFailure(ipFails); recordFailure(orderKey); return res.status(404).json(GUEST_NOT_FOUND); };
 
     const orderId = String(req.params.id || '').trim().replace(/^#/, '').toUpperCase();   // people type "ins0001" or "#INS0001"
     const order = must(await supabase.from('orders').select('*').eq('id', orderId).maybeSingle(), 'guestOrder:lookup');
-    if (!order) return res.status(404).json({ message: 'Order not found. Check your Order ID and try again.' });
+    if (!order) return miss();
 
     const user = must(await supabase.from('users').select('*').eq('id', order.user_id).maybeSingle(), 'guestOrder:user');
     const normalized = String(contact).trim().toLowerCase();
     const normalizedDigits = normalized.replace(/\D/g, '');
     const matchesEmail = user && user.email && user.email.toLowerCase() === normalized;
     const matchesPhone = normalizedDigits.length >= 10 && order.address_phone && order.address_phone.replace(/\D/g, '').endsWith(normalizedDigits.slice(-10));
-    if (!matchesEmail && !matchesPhone) {
-      return res.status(404).json({ message: 'Order not found. Check your Order ID and the email/phone used at checkout.' });
-    }
-    res.json({ order: await shapeOrder(order), inquiryToken: inquiryToken(order.id) });
+    if (!matchesEmail && !matchesPhone) return miss();
+    res.json({ order: await shapeOrder(order, { mask: true }), inquiryToken: inquiryToken(order.id) });
   } catch (err) {
     console.error('GET /orders/guest/:id failed:', err);
     res.status(500).json({ message: 'Something went wrong on the server.' });
@@ -222,7 +238,7 @@ function validateCancelReason(body) {
   const known = CANCEL_REASONS.find(r => r.key === reason);
   if (!known) return { error: 'Choose a valid reason for cancelling.' };
   const cleanDetail = String(detail || '').trim().slice(0, 500);
-  if (reason === 'other' && !cleanDetail) return { error: "Add a short note explaining why — required for \"Other\"." };
+  if (reason === 'other' && !cleanDetail) return { error: "Please add a short note explaining why. It is required for \"Other\"." };
   return { reason, detail: cleanDetail || null };
 }
 
@@ -240,8 +256,7 @@ const MAX_FAILS_PER_ORDER = 5;
 
 router.post('/guest/:id/cancel-request', async (req, res) => {
   const orderId = String(req.params.id || '').trim().replace(/^#/, '').toUpperCase();
-  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  const clientKey = 'guest-cancel:ip:' + (forwarded || req.ip || 'unknown');
+  const clientKey = 'guest-cancel:ip:' + clientIp(req);
   const orderKey = 'guest-cancel:order:' + orderId.toUpperCase();
   const notFound = { message: 'Order not found. Check your Order ID and the email used at checkout.' };
 
@@ -282,7 +297,7 @@ router.post('/guest/:id/cancel-request', async (req, res) => {
     }).eq('id', order.id), 'guestCancelRequest:update');
 
     const updated = must(await supabase.from('orders').select('*').eq('id', order.id).single(), 'guestCancelRequest:reread');
-    res.json({ order: await shapeOrder(updated) });
+    res.json({ order: await shapeOrder(updated, { mask: true }) });
   } catch (err) {
     console.error('POST /orders/guest/:id/cancel-request failed:', err);
     res.status(500).json({ message: 'Something went wrong on the server.' });

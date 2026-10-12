@@ -150,7 +150,7 @@ router.post('/', async (req, res) => {
     const result = await addItem(req.userId, req.body);
     if (result.error) return res.status(400).json({ message: result.error });
     const response = await cartResponse(req.userId);
-    if (result.clamped) response.message = `Only ${result.available} left in stock — added the most we have.`;
+    if (result.clamped) response.message = `Only ${result.available} left in stock, so we added the most we have.`;
     res.status(201).json(response);
   } catch (err) {
     console.error('POST /cart failed:', err);
@@ -181,18 +181,18 @@ router.put('/:itemId', async (req, res) => {
     const variant = line.variant_id ? must(await supabase.from('product_variants').select('id, stock').eq('id', line.variant_id).maybeSingle(), 'putItem:variant') : null;
     const requested = Math.max(1, Number(qty) || 1);
     if (variant && variant.stock <= 0) {
-      return res.status(400).json({ message: 'This colour just sold out — remove it from your bag to check out.' });
+      return res.status(400).json({ message: 'This colour just sold out. Remove it from your bag to check out.' });
     }
     const finalQty = variant ? Math.min(requested, variant.stock) : requested;
 
     const [updRes, touchRes] = await Promise.all([
-      supabase.from('cart_items').update({ qty: finalQty, updated_at: new Date().toISOString() }).eq('id', req.params.itemId),
+      supabase.from('cart_items').update({ qty: finalQty, updated_at: new Date().toISOString() }).eq('id', req.params.itemId).eq('user_id', req.userId),
       supabase.from('cart_meta').upsert({ user_id: req.userId, recovery_email_sent_at: null }, { onConflict: 'user_id' })
     ]);
     must(updRes, 'putItem:update');
     must(touchRes, 'touchCartMeta');
     const response = await cartResponse(req.userId);
-    if (finalQty < requested) response.message = `Only ${variant.stock} left in stock — set to the max available.`;
+    if (finalQty < requested) response.message = `Only ${variant.stock} left in stock, so we set it to the most available.`;
     res.json(response);
   } catch (err) {
     console.error('PUT /cart/:itemId failed:', err);

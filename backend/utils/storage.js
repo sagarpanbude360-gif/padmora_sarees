@@ -28,8 +28,29 @@ function newName(file, prefix) {
   return `${prefix || ''}${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
 }
 
+// What the file REALLY is, from its first bytes. The browser's "this is a JPEG" label is only a claim: a web page or script can
+// be sent under an image label, so the label is checked against the content before anything is stored. -> a mime type, or null.
+function sniffMime(buf) {
+  if (!buf || buf.length < 12) return null;
+  if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return 'image/jpeg';
+  if (buf[0] === 0x89 && buf.toString('ascii', 1, 4) === 'PNG' && buf[4] === 0x0D && buf[5] === 0x0A && buf[6] === 0x1A && buf[7] === 0x0A) return 'image/png';
+  if (buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  if (buf.toString('ascii', 0, 4) === 'GIF8') return 'image/gif';
+  if (buf.toString('ascii', 4, 8) === 'ftyp') return buf.toString('ascii', 8, 12) === 'qt  ' ? 'video/quicktime' : 'video/mp4';
+  if (buf[0] === 0x1A && buf[1] === 0x45 && buf[2] === 0xDF && buf[3] === 0xA3) return 'video/webm';
+  return null;
+}
+const sameKind = (declared, sniffed) => declared === sniffed || (/^video\/(mp4|quicktime)$/.test(declared) && /^video\/(mp4|quicktime)$/.test(sniffed));
+
 // Stores one multer memory file and returns the public URL to save in the database.
 async function saveUpload(file, prefix) {
+  const real = sniffMime(file.buffer);
+  if (!real || !sameKind(file.mimetype, real)) {
+    const e = new Error('That file is not a valid photo or video. Please choose a JPG, PNG or WEBP photo.');
+    e.badType = true;
+    throw e;
+  }
+  file = Object.assign(file, { mimetype: real === 'video/quicktime' && file.mimetype === 'video/mp4' ? 'video/mp4' : real });
   const name = newName(file, prefix);
   const { error } = await supabase.storage.from(BUCKET).upload(name, file.buffer, {
     contentType: file.mimetype,
@@ -71,4 +92,4 @@ async function removeUpload(url) {
   } catch (_) { /* ignore */ }
 }
 
-module.exports = { saveUpload, removeUpload, isReturnPhotoUrl, isCustomerPhotoUrl, publicBase, BUCKET };
+module.exports = { sniffMime, saveUpload, removeUpload, isReturnPhotoUrl, isCustomerPhotoUrl, publicBase, BUCKET };

@@ -13,7 +13,7 @@ const STOCK_NOTE_FROM = 2, STOCK_NOTE_TO = 3;
 function stockNote(stock, colorName) {
   const n = Number(stock);
   if (n <= 0) return { text: 'Out of stock in this colour.', level: 'low' };
-  if (n >= STOCK_NOTE_FROM && n <= STOCK_NOTE_TO) return { text: 'Only ' + n + ' left' + (colorName ? ' in ' + colorName : '') + ' — this piece is not mass-produced.', level: 'low' };
+  if (n >= STOCK_NOTE_FROM && n <= STOCK_NOTE_TO) return { text: 'Only ' + n + ' left' + (colorName ? ' in ' + colorName : '') + '. This piece is not mass-produced.', level: 'low' };
   return null;
 }
 function escHTML(s) {
@@ -182,7 +182,7 @@ function returnedBoxHTML(o) {
   const day = d => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
   const on = rr.refundedAt ? ' on ' + day(rr.refundedAt) : '';
   const how = rr.method === 'store_credit'
-    ? 'Issued as store credit' + on + (rr.couponCode ? ' — use code <strong>' + escHTML(rr.couponCode) + '</strong> at checkout.' : '.')
+    ? 'Issued as store credit' + on + (rr.couponCode ? '. Use code <strong>' + escHTML(rr.couponCode) + '</strong> at checkout.' : '.')
     : rr.method === 'bank_transfer'
       ? 'Transferred to the bank / UPI details you gave us' + on + '. It can take a few working days to show.'
       : 'Sent back to your original payment method' + on + '. It usually reaches your account within 5–7 working days.';
@@ -452,7 +452,7 @@ async function cartAdd(productId, qty, color, variantId) {
   else items.push({ id: lineId, productId: Number(productId), variantId: variantId ? Number(variantId) : null, color: color || 'default', qty: finalQty });
   setGuestCart(items);
   const response = await guestCartResponse();
-  if (stock != null && finalQty < requested) response.message = `Only ${stock} left in stock — added the most we have.`;
+  if (stock != null && finalQty < requested) response.message = `Only ${stock} left in stock, so we added the most we have.`;
   return response;
 }
 
@@ -465,14 +465,14 @@ async function cartUpdateQty(itemId, qty) {
   const requested = Math.max(1, qty);
   const stock = await guestResolveStock(line.productId, line.variantId, line.color);
   if (stock != null && stock <= 0) {
-    throw new Error('This colour just sold out — remove it from your bag to check out.');
+    throw new Error('This colour just sold out. Remove it from your bag to check out.');
   }
   const finalQty = stock == null ? requested : Math.min(requested, stock);
 
   line.qty = finalQty;
   setGuestCart(items);
   const response = await guestCartResponse();
-  if (stock != null && finalQty < requested) response.message = `Only ${stock} left in stock — set to the max available.`;
+  if (stock != null && finalQty < requested) response.message = `Only ${stock} left in stock, so we set it to the most available.`;
   return response;
 }
 

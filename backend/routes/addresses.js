@@ -3,6 +3,9 @@ const { supabase, must } = require('../utils/db');
 const { requireAuth } = require('../middleware/auth');
 const { validateAddress } = require('../utils/indiaGeo');
 
+// a short tag such as Home or Work: no HTML brackets, at most 30 characters
+const cleanLabel = v => String(v == null ? '' : v).replace(/[<>]/g, '').trim().slice(0, 30);
+
 const router = express.Router();
 router.use(requireAuth);
 
@@ -27,7 +30,8 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { label, isDefault } = req.body;
+    const { isDefault } = req.body;
+    const label = cleanLabel(req.body.label);
     // the same rules as checkout: full name, address, a state, a city that is in that state, a pincode that exists there, a mobile number
     const checked = await validateAddress(req.body);
     if (checked.error) return res.status(400).json({ message: checked.error, field: checked.field });
@@ -71,7 +75,7 @@ router.put('/:id(\\d{1,9})', async (req, res) => {
     const existing = must(await supabase.from('addresses').select('id').eq('id', id).eq('user_id', req.userId).maybeSingle(), 'putAddress:lookup');
     if (!existing) return res.status(404).json({ message: 'Address not found.' });
 
-    const { label } = req.body;
+    const label = cleanLabel(req.body.label);
     const checked = await validateAddress(req.body);
     if (checked.error) return res.status(400).json({ message: checked.error, field: checked.field });
     const { name, line1, city, state, pincode, phone } = checked.address;

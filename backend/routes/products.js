@@ -231,7 +231,7 @@ router.post('/:id(\\d{1,9})/prebook', async (req, res) => {
       return res.status(400).json({ message: 'Choose a colour first.' });
     }
     if (variant.stock > 0) {
-      return res.status(400).json({ message: 'This colour is already in stock — no need to pre-book.' });
+      return res.status(400).json({ message: 'This colour is already in stock. No need to pre-book.' });
     }
 
     must(await supabase.from('prebook_requests').upsert({
@@ -239,7 +239,7 @@ router.post('/:id(\\d{1,9})/prebook', async (req, res) => {
       created_at: new Date().toISOString()
     }, { onConflict: 'variant_id,email', ignoreDuplicates: true }), 'prebook:insert');
 
-    res.status(201).json({ message: "You're on the list — we'll email you the moment it's back." });
+    res.status(201).json({ message: "You're on the list. We'll email you the moment it's back." });
   } catch (err) {
     console.error('POST /products/:id/prebook failed:', err);
     res.status(500).json({ message: 'Something went wrong on the server.' });

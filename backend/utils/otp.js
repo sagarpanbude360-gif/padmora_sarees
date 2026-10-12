@@ -41,30 +41,43 @@ async function createOtp(email, purpose) {
 }
 
 // Every failure path (no row, expired, wrong code, too many attempts)
-// returns false with no further detail — the caller shows one generic
+// returns false with no further detail - the caller shows one generic
 // "invalid or expired" message so a code can't be probed apart from a typo.
+//
+// Two requests can arrive at the same instant (a script firing hundreds of guesses, or a double click). So the two things that must
+// hold are done with single database updates that only succeed for ONE caller:
+//  - every guess first takes its own numbered attempt slot (attempts = n -> n + 1 only while it is still n), so a burst of parallel
+//    guesses cannot all be counted as "attempt 1": at most MAX_ATTEMPTS guesses are ever compared against one code;
+//  - a correct code is consumed with "consumed_at is still empty", so it can sign in once, however many requests carry it.
 async function verifyOtp(email, purpose, code) {
   const normalizedEmail = email.toLowerCase().trim();
-  const row = must(
-    await supabase.from('email_otps').select('*').eq('email', normalizedEmail).eq('purpose', purpose)
-      .is('consumed_at', null).gt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false }).limit(1).maybeSingle(),
-    'verifyOtp:lookup'
-  );
-  if (!row) return false;
+  for (let round = 0; round < 4; round++) {
+    const row = must(
+      await supabase.from('email_otps').select('*').eq('email', normalizedEmail).eq('purpose', purpose)
+        .is('consumed_at', null).gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      'verifyOtp:lookup'
+    );
+    if (!row || row.attempts >= MAX_ATTEMPTS) return false;
 
-  const nextAttempts = row.attempts + 1;
-  if (nextAttempts >= MAX_ATTEMPTS) {
-    must(await supabase.from('email_otps').update({ attempts: nextAttempts, consumed_at: new Date().toISOString() }).eq('id', row.id), 'verifyOtp:burn');
-  } else {
-    must(await supabase.from('email_otps').update({ attempts: nextAttempts }).eq('id', row.id), 'verifyOtp:attempt');
+    const slot = must(
+      await supabase.from('email_otps').update({ attempts: row.attempts + 1 }).eq('id', row.id).eq('attempts', row.attempts).is('consumed_at', null).select('id'),
+      'verifyOtp:attempt'
+    );
+    if (!slot.length) continue;   // another request took that attempt slot first: look again
+
+    const match = await bcrypt.compare(String(code || ''), row.code_hash);
+    if (!match) {
+      if (row.attempts + 1 >= MAX_ATTEMPTS) must(await supabase.from('email_otps').update({ consumed_at: new Date().toISOString() }).eq('id', row.id).is('consumed_at', null), 'verifyOtp:burn');
+      return false;
+    }
+    const used = must(
+      await supabase.from('email_otps').update({ consumed_at: new Date().toISOString() }).eq('id', row.id).is('consumed_at', null).select('id'),
+      'verifyOtp:consume'
+    );
+    return used.length === 1;
   }
-
-  const match = await bcrypt.compare(String(code || ''), row.code_hash);
-  if (!match) return false;
-
-  must(await supabase.from('email_otps').update({ consumed_at: new Date().toISOString() }).eq('id', row.id), 'verifyOtp:consume');
-  return true;
+  return false;
 }
 
 module.exports = { createOtp, verifyOtp };

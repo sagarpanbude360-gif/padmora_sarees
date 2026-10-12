@@ -9,6 +9,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { applySiteUrl, blockSearchEngines } = require('./utils/siteUrl');
 applySiteUrl();   // SITE_URL typed without https:// is fixed before any e-mail / sitemap code reads it
+require('./utils/secrets').assertConfig();   // refuses to start on a real deployment with a missing or placeholder JWT_SECRET
 const express = require('express');
 const cors = require('cors');
 
@@ -43,6 +44,19 @@ const { ready: dbReady } = require('./utils/db');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// How many proxies sit in front of this app (see utils/proxy.js). It decides what req.ip is: only the address our own proxy added to
+// X-Forwarded-For is believed, so a visitor cannot invent an address to dodge the login and lookup limits.
+const { trustProxySetting } = require('./utils/proxy');
+app.set('trust proxy', trustProxySetting());
+let proxyHintShown = false;
+app.use((req, res, next) => {
+  if (!proxyHintShown && req.headers['x-forwarded-for'] && !app.get('trust proxy')) {
+    proxyHintShown = true;
+    console.warn('[config] Requests arrive with X-Forwarded-For but TRUST_PROXY is off, so every visitor looks like the proxy to the rate limits. If this app runs behind a host proxy, set TRUST_PROXY=1.');
+  }
+  next();
+});
+
 // Admin subdomain isolation — once a real admin subdomain (e.g.
 // adminmanagement.padmorasarees.com) exists and points at this same app,
 // set ADMIN_HOST to it and the admin panel + its API become reachable only
@@ -53,7 +67,8 @@ const PORT = process.env.PORT || 5000;
 // ships with zero behaviour change until deliberately turned on.
 const ADMIN_HOST = process.env.ADMIN_HOST || null;
 function isAdminHost(req) {
-  return !!ADMIN_HOST && req.hostname === ADMIN_HOST;
+  // the Host header the proxy forwarded (never X-Forwarded-Host, which a visitor could send themselves)
+  return !!ADMIN_HOST && String(req.headers.host || '').split(':')[0].toLowerCase() === String(ADMIN_HOST).toLowerCase();
 }
 function adminHostOnly(req, res, next) {
   if (!ADMIN_HOST || isAdminHost(req)) return next();
@@ -75,6 +90,7 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   if (blockSearchEngines()) res.setHeader('X-Robots-Tag', 'noindex, nofollow');   // a test copy of the shop must never be listed by Google
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');   // the return and review photo screens use the camera; nothing needs the microphone or location
   res.setHeader('X-Frame-Options', adminArea ? 'DENY' : 'SAMEORIGIN');
   res.setHeader('Content-Security-Policy', adminArea ? "frame-ancestors 'none'" : "frame-ancestors 'self'");
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') res.setHeader('Strict-Transport-Security', 'max-age=15552000');
@@ -87,10 +103,37 @@ let compression = null;
 try { compression = require('compression'); } catch (e) { console.warn('[server] "compression" is not installed - responses will not be gzipped (run npm install).'); }
 if (compression) app.use(compression());
 
-app.use(cors());
+// Browsers on OTHER websites may not read this API's answers: only this site, its admin address and (for a test copy) the addresses in
+// CORS_ORIGINS are allowed. Requests with no Origin (this site's own pages, Razorpay's server, curl) are not affected.
+const corsAllowed = (() => {
+  const set = new Set();
+  const add = v => { try { const u = new URL(/^https?:\/\//i.test(v) ? v : 'https://' + v); set.add(u.origin); if (/^www\./.test(u.hostname)) set.add(u.protocol + '//' + u.hostname.slice(4)); else set.add(u.protocol + '//www.' + u.hostname); } catch (e) { /* ignore */ } };
+  if (process.env.SITE_URL) add(process.env.SITE_URL);
+  if (process.env.ADMIN_HOST) add(process.env.ADMIN_HOST);
+  String(process.env.CORS_ORIGINS || '').split(',').map(x => x.trim()).filter(Boolean).forEach(add);
+  return set;
+})();
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (corsAllowed.has(origin)) return cb(null, true);
+    if (!require('./utils/secrets').isProduction() && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return cb(null, true);
+    return cb(null, false);
+  }
+}));
 // Razorpay's payment webhook must see the raw body (its signature is over the exact bytes), so it is mounted before the JSON parser.
 app.post('/api/payments/razorpay/webhook', express.raw({ type: '*/*', limit: '1mb' }), require('./routes/paymentWebhook'));
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+
+// A generous ceiling per address on the public API (the admin panel is exempt): enough for a busy household or a shared phone network,
+// far below what a scraper or a password-guessing script needs. Stricter limits sit on login, codes, lookups, messages and uploads.
+const { hit: rateHit, clientIp: callerIp } = require('./utils/attemptLimiter');
+app.use('/api', (req, res, next) => {
+  if (/^\/(admin|admin-auth)(\/|$)/.test(req.path)) return next();
+  const r = rateHit('api:' + callerIp(req), 3000, 5 * 60 * 1000);
+  if (r.blocked) { res.setHeader('Retry-After', String(r.retryAfterSec)); return res.status(429).json({ message: 'Too many requests from this connection. Please wait a minute and try again.' }); }
+  next();
+});
 
 // ---- Speed: HTTP caching of public data, and emptying the in-memory caches after changes ----
 const { invalidateAll, onInvalidate } = require('./utils/cache');
@@ -199,7 +242,7 @@ async function productMeta(id) {
     const plain = richToPlain(p.description || (def && def.description) || '').replace(/\s+/g, ' ').trim();
     const fallback = `${p.name}: a handloom ${p.fabric} saree${colours.length ? ' in ' + colours.slice(0, 3).join(', ') : ''}, from Rs. ${def ? def.price : p.price}. Free shipping above Rs. 1,999 and easy returns from Padmora by Yashi.`;
     meta = {
-      title: `${p.name} — ${p.fabric} Saree | Padmora Sarees by Yashi`,
+      title: `${p.name} (${p.fabric} saree) | Padmora Sarees by Yashi`,
       description: (plain || fallback).slice(0, 158),
       image: photo ? photo.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + '?width=1200&quality=78&resize=contain' : ''
     };
@@ -339,6 +382,10 @@ app.get('*', (req, res, next) => {
 
 app.use((req, res) => res.status(404).json({ message: 'Not found.' }));
 app.use((err, req, res, next) => {
+  // a too-large or malformed request body is the caller's mistake, not a server fault
+  if (err && err.status >= 400 && err.status < 500 && err.expose) {
+    return res.status(err.status).json({ message: err.status === 413 ? 'That request is too large.' : 'That request could not be read.' });
+  }
   console.error(err);
   res.status(500).json({ message: 'Something went wrong on the server.' });
 });
@@ -350,6 +397,14 @@ dbReady.then(() => {
   app.listen(PORT, () => {
     console.log(`Padmora by Yashi server running at http://localhost:${PORT}`);
     dataVersion.start();   // notice changes made through any other copy of the server
+
+    // Keep the home page and catalogue caches warm. Left alone they go cold after ~15 seconds without a visitor, and the next
+    // visitor would wait over a second for the database; refreshing every 10 seconds means nobody does (read-only, a few
+    // queries each time).
+    const pub = require('./utils/publicData');
+    const warmCaches = () => Promise.all([pub.bootstrap(), pub.home(), require('./utils/db').getProducts()]).catch(err => console.error('Cache warm-up failed:', err.message));
+    warmCaches();
+    setInterval(warmCaches, 10000).unref();
 
     // Background jobs — real setInterval timers on this long-running Node
     // process, not decorative. Each one is also individually safe to call

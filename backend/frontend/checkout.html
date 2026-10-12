@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-192.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
-<title>Checkout — Padmora Sarees by Yashi</title>
+<title>Checkout | Padmora Sarees by Yashi</title>
 <meta name="description" content="Secure checkout for your Padmora saree order.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="preload" href="/fonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -37,7 +37,7 @@
           <div class="form-field"><label>First Name *</label><input type="text" id="fName" placeholder="Ananya" autocomplete="given-name" maxlength="40"></div>
           <div class="form-field"><label>Last Name</label><input type="text" id="lName" placeholder="Sharma" autocomplete="family-name" maxlength="40"></div>
         </div>
-        <div class="form-field" id="guestEmailField"><label>Email Address *</label><input type="email" id="guestEmail" placeholder="you@example.com" autocomplete="email" maxlength="254"><span style="display:block;font-size:11.5px;color:var(--ink-soft);margin-top:6px;">We'll send your order confirmation here — no account needed.</span></div>
+        <div class="form-field" id="guestEmailField"><label>Email Address *</label><input type="email" id="guestEmail" placeholder="you@example.com" autocomplete="email" maxlength="254"><span style="display:block;font-size:11.5px;color:var(--ink-soft);margin-top:6px;">We'll send your order confirmation here. No account needed.</span></div>
         <div class="form-field"><label>Address *</label><input type="text" id="line1" placeholder="House no, street, area" maxlength="200"></div>
         <div class="form-row-2">
           <div class="form-field"><label>State *</label><select id="state"></select></div>
@@ -55,7 +55,7 @@
       <div id="checkoutStep2" style="display:none;">
         <div class="pay-subpanel" style="text-align:center;">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" style="width:36px;height:36px;color:var(--maroon);margin:0 auto 12px;display:block;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <p style="font-size:13.5px;color:var(--ink-soft);margin:0;">You'll pay securely on Razorpay's checkout — UPI, cards, or netbanking, whichever you prefer. We never see or store your payment details.</p>
+          <p style="font-size:13.5px;color:var(--ink-soft);margin:0;">You'll pay securely on Razorpay's checkout with UPI, cards or netbanking, whichever you prefer. We never see or store your payment details.</p>
         </div>
 
         <div class="co-address" id="coAddress"></div>
@@ -137,7 +137,7 @@
       document.getElementById('savedAddressList').innerHTML = addresses.map((a,i)=>`
         <label class="pay-option ${i===0?'active':''}">
           <input type="radio" name="savedAddr" value="${a.id}" ${i===0?'checked':''}>
-          <strong>${a.label}</strong> — ${a.line1}, ${a.city} ${a.pincode}
+          <strong>${escHTML(a.label)}</strong>: ${escHTML(a.line1)}, ${escHTML(a.city)} ${escHTML(a.pincode)}
         </label>`).join('');
       document.querySelectorAll('input[name="savedAddr"]').forEach(r=>r.addEventListener('change', ()=>{
         document.querySelectorAll('#savedAddressList .pay-option').forEach(l=>l.classList.remove('active'));
@@ -209,7 +209,7 @@
     const applied = !!cart.coupon;
     document.getElementById('coCouponForm').style.display = applied ? 'none' : 'flex';
     document.getElementById('coCouponApplied').style.display = applied ? 'flex' : 'none';
-    if(applied) document.getElementById('coCouponAppliedText').textContent = `${cart.coupon} applied — you save ${money(cart.discount)}`;
+    if(applied) document.getElementById('coCouponAppliedText').textContent = `${cart.coupon} applied. You save ${money(cart.discount)}`;
   }
 
   // Applies / removes a promo code for this checkout. Buy Now prices the one saree again with the code; a normal
@@ -285,7 +285,7 @@
       coPending--;
       if(coPending === 0 && res){
         cart = res;
-        if(!cart.items.length){ clearBuyNow(); showCheckoutEmpty(buyNowItem ? 'Nothing left to buy.' : 'Your bag is empty — add a saree before checking out.', '/shop', 'Browse Sarees'); return; }
+        if(!cart.items.length){ clearBuyNow(); showCheckoutEmpty(buyNowItem ? 'Nothing left to buy.' : 'Your bag is empty. Add a saree before checking out.', '/shop', 'Browse Sarees'); return; }
         renderCheckoutSummary();
       }
       if(coPending === 0) document.getElementById('toStep3').disabled = false;
@@ -318,7 +318,7 @@
     if(!cart.items.length){
       if(buyNowItem){ clearBuyNow(); showCheckoutEmpty('Nothing left to buy.', '/product?id=' + buyNowItem.productId, 'Back to the saree'); return; }
       queueCheckoutOp(() => cartRemoveItem(item.id));
-      showCheckoutEmpty('Your bag is empty — add a saree before checking out.', '/shop', 'Browse Sarees');
+      showCheckoutEmpty('Your bag is empty. Add a saree before checking out.', '/shop', 'Browse Sarees');
       return;
     }
     estimateTotals(); renderCheckoutSummary();
@@ -365,7 +365,7 @@
         ${it.imageUrl
           ? `<img src="${escHTML(it.imageUrl)}" alt="${escHTML(it.name)}">`
           : `<span class="order-confirm-item-empty">${LOTUS_GLYPH_SVG}</span>`}
-        <span class="order-confirm-item-name">${escHTML(it.name)}${it.color ? ' — ' + escHTML(it.color) : ''}${it.qty > 1 ? ' × ' + it.qty : ''}</span>
+        <span class="order-confirm-item-name">${escHTML(it.name)}${it.color ? ' · ' + escHTML(it.color) : ''}${it.qty > 1 ? ' × ' + it.qty : ''}</span>
       </div>`).join('');
     document.querySelectorAll('.checkout-steps .step').forEach(el => el.style.display = '');
     goToStep(3);
@@ -491,7 +491,7 @@
       if(!cart.items.length){
         document.querySelector('main .container').innerHTML = `
           <div class="empty-state">
-            <p>Your bag is empty — add a saree before checking out.</p>
+            <p>Your bag is empty. Add a saree before checking out.</p>
             <a href="/shop" class="btn btn-primary" style="margin-top:16px;">Browse Sarees</a>
           </div>`;
         return;

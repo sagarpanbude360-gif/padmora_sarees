@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-192.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
-<title>Your Bag — Padmora Sarees by Yashi</title>
+<title>Your Bag | Padmora Sarees by Yashi</title>
 <meta name="description" content="Review the sarees in your bag before checkout.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fxjlgsatgajagzqdokbe.supabase.co" crossorigin>
@@ -56,7 +56,7 @@
     }
 
     wrap.innerHTML = `
-      ${!isLoggedIn() ? `<div class="form-error show" style="background:rgba(31,75,74,0.08);color:var(--teal);">Shopping as a guest — <a href="/login?redirect=/cart" style="color:var(--teal);text-decoration:underline;">log in</a> to save your bag across devices and check out.</div>` : ''}
+      ${!isLoggedIn() ? `<div class="form-error show" style="background:rgba(31,75,74,0.08);color:var(--teal);">Shopping as a guest. <a href="/login?redirect=/cart" style="color:var(--teal);text-decoration:underline;">log in</a> to save your bag across devices and check out.</div>` : ''}
       <div class="cart-layout">
         <div>
           ${items.map((item)=>`
@@ -143,7 +143,7 @@
     if(!code) return;
     try{
       cart = await cartApplyCoupon(code);
-      toast(`Promo code applied — ${money(cart.discount)} off!`);
+      toast(`Promo code applied: ${money(cart.discount)} off!`);
       renderCart();
     }catch(e){ toast(e.message, 'error'); }
   }

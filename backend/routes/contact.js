@@ -1,7 +1,7 @@
 const express = require('express');
 const { supabase, must } = require('../utils/db');
 const { normalizeOrderId } = require('../utils/spreadsheet');
-const { isBlocked, recordFailure, clientIp } = require('../utils/attemptLimiter');
+const { isBlocked, recordFailure, clientIp, hit } = require('../utils/attemptLimiter');
 
 const router = express.Router();
 
@@ -14,9 +14,16 @@ const ORDER_SUBJECTS = ['Order Support', 'Returns & Exchange'];
 
 router.post('/', async (req, res) => {
   try {
-    const { name, email, subject, message, orderId } = req.body;
+    const { name, email, subject, message, orderId } = req.body || {};
     if (!name || !email || !message) {
       return res.status(400).json({ message: 'Name, email and a message are required.' });
+    }
+    if (String(name).length > 100 || String(email).length > 254 || String(subject || '').length > 100 || String(message).length > 4000) {
+      return res.status(400).json({ message: 'That message is too long. Please shorten it and try again.' });
+    }
+    // stops the form being used to flood the inbox: a few messages an hour per visitor and per e-mail address
+    if (hit('contact:ip:' + clientIp(req), 20, 60 * 60 * 1000).blocked || hit('contact:email:' + String(email).trim().toLowerCase(), 10, 60 * 60 * 1000).blocked) {
+      return res.status(429).json({ message: 'You have sent several messages already. Please wait a while before sending another, or call us.' });
     }
     if (!EMAIL_RE.test(email)) {
       return res.status(400).json({ message: 'Enter a valid email address so we can reply to you.' });
@@ -43,7 +50,7 @@ router.post('/', async (req, res) => {
       name, email, subject: subject || 'General enquiry', message, order_id, created_at: new Date().toISOString()
     }), 'postContact');
 
-    res.status(201).json({ message: 'Thanks for reaching out — our team will get back to you within 24 hours.' });
+    res.status(201).json({ message: 'Thanks for reaching out. Our team will get back to you within 24 hours.' });
   } catch (err) {
     console.error('POST /contact failed:', err);
     res.status(500).json({ message: 'Something went wrong on the server.' });

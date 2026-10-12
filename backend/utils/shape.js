@@ -34,6 +34,8 @@ function toProductApiShape(row, opts) {
     badge: row.badge,
     swatch: row.swatch,
     desc: opts && opts.list ? undefined : sanitizeRich(row.description),
+    // the separately edited "Product details" section of the product page (empty = the page shows its standard specs)
+    details: opts && opts.list ? undefined : sanitizeRich(row.details),
     stock: row.stock,
     status: row.status || 'active',
     weaverName: row.weaver_name,

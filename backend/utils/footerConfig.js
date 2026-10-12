@@ -1,7 +1,7 @@
 // Storefront footer content (tagline, link columns, bottom line) — edited in Admin → Settings → Footer.
 // Contact email and social links stay in Store Info; this holds everything else the footer shows.
 const DEFAULT_FOOTER = {
-  tagline: 'Bringing handloom weavers and heritage crafts directly to your wardrobe — one drape at a time.',
+  tagline: 'Bringing handloom weavers and heritage crafts directly to your wardrobe, one drape at a time.',
   columns: [
     { title: 'Customer Care', links: [
       { label: 'Track Order', url: '/track-order' },
@@ -11,11 +11,11 @@ const DEFAULT_FOOTER = {
       { label: 'Contact Us', url: '/contact' }
     ] },
     { title: 'Company', links: [
-      { label: 'About Padmora', url: '/about' }
+      { label: 'About Padmora Sarees', url: '/about' }
     ] }
   ],
-  bottomLeft: '© 2026 Padmora. All rights reserved.',
-  bottomRight: 'Made with care for handloom weavers across India.'
+  bottomLeft: '© 2026 Padmora Sarees. All rights reserved.',
+  bottomRight: 'Blooming with love, culture and tradition.'
 };
 
 const MAX_COLUMNS = 4;

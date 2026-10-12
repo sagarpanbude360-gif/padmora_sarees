@@ -30,7 +30,7 @@ const uploadReturnPhotos = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024, files: 5 }, // 8MB each, up to 5 photos
   fileFilter: (req, file, cb) => {
-    if (!IMAGE_ONLY[file.mimetype]) return cb(new Error('Photos only — use JPG, PNG, or WEBP.'));
+    if (!IMAGE_ONLY[file.mimetype]) return cb(new Error('Photos only. Please use JPG, PNG or WEBP.'));
     cb(null, true);
   }
 });

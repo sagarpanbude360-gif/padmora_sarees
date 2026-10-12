@@ -87,7 +87,8 @@
                     <select id="npBadge"><option value="">None</option><option value="new">New</option><option value="bestseller">Bestseller</option><option value="sale">Sale</option></select>
                   </div>
                 </div>
-                <div class="form-field"><label for="npDesc">Description <button type="button" class="info-tip" data-tip="What customers read on the product page: the weave, border, length, blouse piece and care. You can use bold and bullet points." aria-label="What customers read on the product page: the weave, border, length, blouse piece and care. You can use bold and bullet points.">i</button></label><textarea id="npDesc" rows="2"></textarea></div>
+                <div class="form-field"><label for="npDesc">Product description <button type="button" class="info-tip" data-tip="The first dropdown on the product page: the story of the saree, its weave, border and feel. You can use bold and bullet points." aria-label="The first dropdown on the product page: the story of the saree, its weave, border and feel. You can use bold and bullet points.">i</button></label><textarea id="npDesc" rows="2"></textarea></div>
+                <div class="form-field"><label for="npDetails">Product details (optional) <button type="button" class="info-tip" data-tip="Shown in the Product details dropdown on the product page: fabric, length, blouse piece, care, delivery. Leave it empty to show the standard details (blouse, length, care, delivery, craft and weaver). You can use bold and bullet points." aria-label="Shown in the Product details dropdown on the product page: fabric, length, blouse piece, care, delivery. Leave it empty to show the standard details (blouse, length, care, delivery, craft and weaver). You can use bold and bullet points.">i</button></label><textarea id="npDetails" rows="2"></textarea></div>
                 <div class="form-row-2">
                   <div class="form-field"><label>Weaver name <button type="button" class="info-tip" data-tip="Who made it. Shown on the product page as part of the saree’s story. Optional." aria-label="Who made it. Shown on the product page as part of the saree’s story. Optional.">i</button></label><input type="text" id="npWeaverName"></div>
                   <div class="form-field"><label>Weaver region (state) <button type="button" class="info-tip" data-tip="The state the weaver works in. Shown on the product page. Optional." aria-label="The state the weaver works in. Shown on the product page. Optional.">i</button></label><select class="admin-input" style="width:100%;" id="npWeaverRegion"></select></div>
@@ -1098,7 +1099,8 @@
           <span style="display:block;font-size:11.5px;color:var(--ink-soft);margin-top:6px;">Sale shows the crossed-out original price, the sale price and “% off” (set the % per colour in the Variants tab). Taking Sale off puts each colour back to its actual price.</span>
         </div>
       </div>
-      <div class="form-field"><label for="egDesc">Description</label><textarea id="egDesc" rows="2">${escHTML(p.desc || '')}</textarea></div>
+      <div class="form-field"><label for="egDesc">Product description <button type="button" class="info-tip" data-tip="The first dropdown on the product page: the story of the saree, its weave, border and feel. A colour can have its own wording under Colours." aria-label="The first dropdown on the product page: the story of the saree, its weave, border and feel. A colour can have its own wording under Colours.">i</button></label><textarea id="egDesc" rows="2">${escHTML(p.desc || '')}</textarea></div>
+      <div class="form-field"><label for="egDetails">Product details <button type="button" class="info-tip" data-tip="Shown in the Product details dropdown on the product page: fabric, length, blouse piece, care, delivery. Leave it empty to show the standard details (blouse, length, care, delivery, craft and weaver). You can use bold and bullet points." aria-label="Shown in the Product details dropdown on the product page: fabric, length, blouse piece, care, delivery. Leave it empty to show the standard details (blouse, length, care, delivery, craft and weaver). You can use bold and bullet points.">i</button></label><textarea id="egDetails" rows="2">${escHTML(p.details || '')}</textarea></div>
       <div class="form-row-2">
         <div class="form-field"><label>Weaver Name</label><input type="text" id="egWeaverName" value="${escHTML(p.weaverName || '')}"></div>
         <div class="form-field"><label>Weaver Region (state)</label><select class="admin-input" style="width:100%;" id="egWeaverRegion">${regionOptionsHTML(p.weaverRegion)}</select></div>
@@ -1115,13 +1117,14 @@
       <button class="btn btn-primary btn-sm" id="egSave">Save General Info</button>`;
 
     enhanceRichText(document.getElementById('egDesc'));
+    enhanceRichText(document.getElementById('egDetails'));
     document.getElementById('egSave').addEventListener('click', async ()=>{
       try{
         const btn = document.getElementById('egSave'); btn.disabled = true; btn.textContent = 'Saving…';
         const {product} = await adminApiFetch('/admin/products/' + p.id, { method:'PUT', body: JSON.stringify({
           name: document.getElementById('egName').value, fabric: document.getElementById('egFabric').value,
           occasion: readOccasionChecks(document.getElementById('egOccasion')), badge: document.getElementById('egBadge').value,
-          desc: document.getElementById('egDesc').value, weaverName: document.getElementById('egWeaverName').value,
+          desc: document.getElementById('egDesc').value, details: document.getElementById('egDetails').value, weaverName: document.getElementById('egWeaverName').value,
           weaverRegion: document.getElementById('egWeaverRegion').value, loomType: document.getElementById('egLoomType').value,
           status: document.getElementById('egStatus').value
         })});
@@ -1386,9 +1389,10 @@
     ctl.focusName();
   }
   function resetAddProductForm(){
-    ['npName','npFabric','npDesc','npWeaverName','npWeaverRegion','npLoomType']
+    ['npName','npFabric','npDesc','npDetails','npWeaverName','npWeaverRegion','npLoomType']
       .forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('npDesc')._rich.set('');
+    document.getElementById('npDetails')._rich.set('');
     document.getElementById('npBadge').value = '';
     document.getElementById('npOccasion').innerHTML = occasionChecksHTML('');
     document.getElementById('npStatus').textContent = '';
@@ -1400,6 +1404,7 @@
 
   fillAddProductDropdowns();
   enhanceRichText(document.getElementById('npDesc'));
+  enhanceRichText(document.getElementById('npDetails'));
   loadOccasionOptions().then(fillAddProductDropdowns);
   buildAddProductColours();
   // Fabric suggestions: the fabrics already in the shop (keeps spelling identical to what the filter uses).
@@ -1466,6 +1471,7 @@
           stock: main.stock, lowStockThreshold: main.lowStockThreshold,
           badge: document.getElementById('npBadge').value,
           desc: document.getElementById('npDesc').value,
+          details: document.getElementById('npDetails').value,
           weaverName: document.getElementById('npWeaverName').value,
           weaverRegion: document.getElementById('npWeaverRegion').value,
           loomType: document.getElementById('npLoomType').value,
@@ -2515,6 +2521,8 @@
   }
 
   // ---- Settings ----
+  // what the Contact Us page shows until these boxes are saved for the first time
+  const CONTACT_DEFAULTS = { hours: 'Mon–Sat, 10am–7pm IST', address: 'Padmora by Yashi Studio\nBandra West, Mumbai, Maharashtra 400050', note: 'Ordering 5+ sarees at once? Mention it in your message and our team will follow up with a bundle quote.' };
   async function loadStoreSettings(){
     try{
       const {store} = await adminApiFetch('/admin/settings/store');
@@ -2535,6 +2543,11 @@
           <div class="form-field"><label>Logo URL</label><input class="admin-input" style="width:100%;" id="stLogoUrl" value="${store.logoUrl||''}"></div>
           <div class="form-field"><label>Favicon URL</label><input class="admin-input" style="width:100%;" id="stFaviconUrl" value="${store.faviconUrl||''}"></div>
         </div>
+        <h4 style="margin:18px 0 4px;font-size:14px;">Contact Us page</h4>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;">The “Get in Touch” box on the Contact Us page. It also uses the phone number and e-mail above. Leave a box empty to hide that line.</p>
+        <div class="form-field"><label>Opening hours</label><input class="admin-input" style="width:100%;" maxlength="80" id="stContactHours" value="${escHTML(typeof store.contactHours === 'string' ? store.contactHours : CONTACT_DEFAULTS.hours)}"></div>
+        <div class="form-field"><label>Studio name and address</label><textarea class="admin-input" style="width:100%;min-height:70px;" maxlength="240" id="stContactAddress">${escHTML(typeof store.contactAddress === 'string' ? store.contactAddress : CONTACT_DEFAULTS.address)}</textarea></div>
+        <div class="form-field"><label>Note under the details (bulk orders and so on)</label><textarea class="admin-input" style="width:100%;min-height:60px;" maxlength="300" id="stContactNote">${escHTML(typeof store.contactNote === 'string' ? store.contactNote : CONTACT_DEFAULTS.note)}</textarea></div>
         <div class="form-field"><label>Shipper address (printed on packing slips)</label><textarea class="admin-input" style="width:100%;min-height:70px;" maxlength="400" id="stShipperAddress">${escHTML(store.shipperAddress||'')}</textarea></div>
         <button class="btn btn-primary btn-sm" id="saveStoreSettings">Save Store Info</button>`;
       document.getElementById('saveStoreSettings').addEventListener('click', async ()=>{
@@ -2548,7 +2561,10 @@
             youtube: document.getElementById('stYoutube').value,
             logoUrl: document.getElementById('stLogoUrl').value,
             faviconUrl: document.getElementById('stFaviconUrl').value,
-            shipperAddress: document.getElementById('stShipperAddress').value
+            shipperAddress: document.getElementById('stShipperAddress').value,
+            contactHours: document.getElementById('stContactHours').value,
+            contactAddress: document.getElementById('stContactAddress').value,
+            contactNote: document.getElementById('stContactNote').value
           })});
           toast('Store info saved');
         }catch(e){ toast(e.message, 'error'); }
@@ -3985,7 +4001,7 @@
           <div class="detail-grid">
             <div class="detail-block">
               <h5>Profile</h5>
-              <p>${escHTML(c.email)}<br>${c.phone || 'No phone on file'}<br>Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</p>
+              <p>${escHTML(c.email)}<br>${c.phone ? escHTML(c.phone) : 'No phone on file'}<br>Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</p>
             </div>
             <div class="detail-block">
               <h5>Flag &amp; Notes</h5>

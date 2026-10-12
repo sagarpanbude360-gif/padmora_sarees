@@ -10,7 +10,7 @@ const OrderInquiry = (function(){
   const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '';
   const STATUS_TEXT = {
     Requested: 'Waiting for our team to review it',
-    Approved: 'Approved — please ship the saree(s) back to us',
+    Approved: 'Approved. Please ship the saree(s) back to us',
     Received: 'We received your saree(s) and are checking them',
     Refunded: 'Refunded',
     Rejected: 'Not approved'
@@ -79,7 +79,7 @@ const OrderInquiry = (function(){
     const split = a => (inq.requests || []).filter(x => x.attempt === a).length > 1;
     const lines = (inq.requests || []).map(r => `
       <div class="oi-hist ${r.status === 'Rejected' ? 'is-rejected' : ''}">
-        <strong>Inquiry ${r.attempt} of ${inq.maxAttempts}</strong>${split(r.attempt) && itemNames(r) ? ' · ' + esc(itemNames(r)) : ''} · ${fmtDate(r.requestedAt)} — ${esc(STATUS_TEXT[r.status] || r.status)}
+        <strong>Inquiry ${r.attempt} of ${inq.maxAttempts}</strong>${split(r.attempt) && itemNames(r) ? ' · ' + esc(itemNames(r)) : ''} · ${fmtDate(r.requestedAt)}: ${esc(STATUS_TEXT[r.status] || r.status)}
         ${r.adminNote ? `<p>Note from our team: ${esc(r.adminNote)}</p>` : ''}
       </div>`).join('');
     body().innerHTML = `
@@ -131,7 +131,7 @@ const OrderInquiry = (function(){
             <button type="button" class="btn btn-sm btn-outline" id="oiTake"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> Take a photo</button>
             <span class="return-photo-count" id="oiPhotoCount"></span>
           </div>
-          <p class="oi-hint">Take clear photos with your camera in good light — the whole saree, and a close-up of the problem. Photos are taken here, not picked from your gallery. Up to ${inq.maxPhotos}.</p>
+          <p class="oi-hint">Take clear photos with your camera in good light: the whole saree, and a close-up of the problem. Photos are taken here, not picked from your gallery. Up to ${inq.maxPhotos}.</p>
           <div class="return-photo-preview" id="oiPreview"></div></div>
 
         <div class="form-error" id="oiError"></div>

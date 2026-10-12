@@ -20,20 +20,22 @@ router.post('/login', async (req, res) => {
     const ip = clientIp(req);
     const pairKey = 'admin-login:' + ip + '|' + String(email).trim().toLowerCase();
     const ipKey = 'admin-login:ip:' + ip;
-    if (isBlocked(pairKey, 6) || isBlocked(ipKey, 30)) {
+    const emailKey = 'admin-login:email:' + String(email).trim().toLowerCase();   // guesses against one account from MANY addresses add up here
+    if (isBlocked(pairKey, 6) || isBlocked(ipKey, 30) || isBlocked(emailKey, 40)) {
       return res.status(429).json({ message: 'Too many login attempts. Please wait 15 minutes and try again.' });
     }
-    const bad = () => { recordFailure(pairKey); recordFailure(ipKey); return res.status(401).json({ message: 'Incorrect email or password.' }); };
+    const bad = () => { recordFailure(pairKey); recordFailure(ipKey); recordFailure(emailKey); return res.status(401).json({ message: 'Incorrect email or password.' }); };
 
     const admin = must(await supabase.from('admin_users').select('*').ilike('email', email).maybeSingle(), 'adminLogin:lookup');
-    if (!admin) return bad();
-    const match = await bcrypt.compare(password, admin.password);
+    // an unknown e-mail costs the same time as a wrong password, so the response time does not reveal which e-mails are admins
+    if (!admin) { await bcrypt.compare(String(password), '$2a$10$7EqJtq98hPqEX7fNZaFWoOa7gWzv3o8kRzXbE6m6o0y8m3W7yq3x6'); return bad(); }
+    const match = await bcrypt.compare(String(password), admin.password);
     if (!match) return bad();
     // Only said once the password is right, so it can't be used to discover which emails are admins.
     if (!admin.active) return res.status(403).json({ message: 'This admin account has been deactivated.' });
     clearFailures(pairKey);
 
-    const token = signAdminToken(admin.id);
+    const token = signAdminToken(admin.id, admin.password);
     res.json({ token, admin: publicAdmin(admin) });
   } catch (err) {
     console.error('POST /admin-auth/login failed:', err);
