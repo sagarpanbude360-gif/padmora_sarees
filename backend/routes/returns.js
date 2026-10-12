@@ -11,8 +11,18 @@ const {
   RETURN_REASONS, categoryForReason, getReturnPolicy, isWithinReturnWindow, computeReturnRefund
 } = require('../utils/returns');
 
+const { hit, clientIp } = require('../utils/attemptLimiter');
+
 const router = express.Router();
 router.use(requireAuth);
+
+// Photos are read into memory before they are stored, so each visitor gets a ceiling per hour (checked BEFORE the file is read).
+function uploadLimit(req, res, next) {
+  const who = req.userId ? 'user:' + req.userId : 'ip:' + clientIp(req);
+  if (hit('upload:' + who, 40, 60 * 60 * 1000).blocked) return res.status(429).json({ message: 'You have uploaded a lot of photos in a short time. Please wait a while and try again.' });
+  next();
+}
+
 
 // Turns a multer failure (bad file type, too many/too large) into a clean
 // 400 with the real reason, instead of falling through to the generic 500.
@@ -94,7 +104,7 @@ router.get('/:id(\\d{1,9})', async (req, res) => {
 // still filling out the form, gets back URLs, then submits those URLs as
 // part of POST / below. Keeps this endpoint reusable if we ever want a
 // "manage return photos after submission" flow without redesigning it.
-router.post('/photos', uploadPhotos, async (req, res) => {
+router.post('/photos', uploadLimit, uploadPhotos, async (req, res) => {
   if (!req.files || !req.files.length) return res.status(400).json({ message: 'No photos uploaded.' });
   try {
     // Never let a stalled storage call keep the customer waiting: give up after 40 seconds with a clear message.
@@ -105,6 +115,7 @@ router.post('/photos', uploadPhotos, async (req, res) => {
     ]);
     res.status(201).json({ urls });
   } catch (err) {
+    if (err.badType) return res.status(400).json({ message: err.message });
     console.error('POST /returns/photos failed:', err);
     if (err.timedOut) return res.status(504).json({ message: 'Saving the photo took too long. Please try again.' });
     res.status(502).json({ message: 'The photos could not be saved. Please try again in a moment.' });

@@ -120,9 +120,11 @@ async function validateAddress(a) {
   const x = a || {};
   const name = String(x.name || '').trim().replace(/\s+/g, ' ');
   if (name.length < 2 || name.length > 80) return { error: 'Enter your full name.', field: 'name' };
+  if (/[<>]/.test(name)) return { error: 'Please remove the < and > symbols from the name.', field: 'name' };
   const line1 = String(x.line1 || '').trim().replace(/\s+/g, ' ');
   if (line1.length < 5) return { error: 'Enter your full address: house number, street and area.', field: 'line1' };
   if (line1.length > 200) return { error: 'Please keep the address under 200 characters.', field: 'line1' };
+  if (/[<>]/.test(line1)) return { error: 'Please remove the < and > symbols from the address.', field: 'line1' };
   const state = normalizeState(x.state);
   if (!state) return { error: 'Choose your state.', field: 'state' };
   const city = canonicalCity(state, x.city);

@@ -7,7 +7,7 @@ const { uploadReturnPhotos } = require('../middleware/upload');
 const { saveUpload } = require('../utils/storage');
 const { readInquiryToken } = require('../utils/inquiryToken');
 const { getInquiryState, createInquiry, explain } = require('../utils/inquiry');
-const { isBlocked, recordFailure, clientIp } = require('../utils/attemptLimiter');
+const { isBlocked, recordFailure, clientIp, hit } = require('../utils/attemptLimiter');
 const { shapeOrder } = require('./orders');
 
 const router = express.Router();
@@ -23,6 +23,13 @@ async function withOrder(req, res, next) {
   next();
 }
 
+// Photos are read into memory before they are stored, so each visitor gets a ceiling per hour (checked BEFORE the file is read).
+function uploadLimit(req, res, next) {
+  const who = req.userId ? 'user:' + req.userId : 'ip:' + clientIp(req);
+  if (hit('upload:' + who, 40, 60 * 60 * 1000).blocked) return res.status(429).json({ message: 'You have uploaded a lot of photos in a short time. Please wait a while and try again.' });
+  next();
+}
+
 function uploadPhotos(req, res, next) {
   uploadReturnPhotos.array('photos', 5)(req, res, (err) => {
     if (err) return res.status(400).json({ message: err.message || 'Upload failed.' });
@@ -32,7 +39,7 @@ function uploadPhotos(req, res, next) {
 
 router.get('/:token', withOrder, async (req, res) => {
   try {
-    const order = await shapeOrder(req.order);
+    const order = await shapeOrder(req.order, { mask: true });   // a link holder sees the sarees and status, not the delivery address
     const state = await getInquiryState(req.order);
     res.json({ order, inquiry: { ...state, message: state.eligible ? null : explain(state) } });
   } catch (err) {
@@ -41,7 +48,7 @@ router.get('/:token', withOrder, async (req, res) => {
   }
 });
 
-router.post('/:token/photos', withOrder, uploadPhotos, async (req, res) => {
+router.post('/:token/photos', withOrder, uploadLimit, uploadPhotos, async (req, res) => {
   if (!req.files || !req.files.length) return res.status(400).json({ message: 'No photos uploaded.' });
   try {
     const save = Promise.all(req.files.map(f => saveUpload(f, 'return-')));
@@ -51,6 +58,7 @@ router.post('/:token/photos', withOrder, uploadPhotos, async (req, res) => {
     ]);
     res.status(201).json({ urls });
   } catch (err) {
+    if (err.badType) return res.status(400).json({ message: err.message });
     console.error('POST /inquiry/:token/photos failed:', err);
     if (err.timedOut) return res.status(504).json({ message: 'Saving the photo took too long. Please try again.' });
     res.status(502).json({ message: 'The photos could not be saved. Please try again in a moment.' });

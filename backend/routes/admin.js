@@ -88,6 +88,7 @@ function uploadChecked(validate) {
       try { req.file.publicUrl = await saveUpload(req.file); }
       catch (e) {
         console.error('Upload could not be stored:', e);
+        if (e.badType) return res.status(400).json({ message: e.message });
         return res.status(502).json({ message: 'The file could not be saved. Please try again in a moment.' });
       }
     }
@@ -2945,7 +2946,7 @@ router.post('/admin-users', asyncRoute(async (req, res) => {
   const { name, email, password, role } = req.body;
   if (!name || !email || !password || !role) return res.status(400).json({ message: 'Name, email, password and role are all required.' });
   if (!ADMIN_ROLES.includes(role)) return res.status(400).json({ message: 'Unknown role.' });
-  if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+  if (String(password).length < 12) return res.status(400).json({ message: 'Password must be at least 12 characters (a few words, with a number or symbol, is easy to remember and hard to guess).' });
 
   const exists = must(await supabase.from('admin_users').select('id').ilike('email', email).maybeSingle(), 'addAdminUser:lookup');
   if (exists) return res.status(409).json({ message: 'An admin account with this email already exists.' });

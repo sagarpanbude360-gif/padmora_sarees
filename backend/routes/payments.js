@@ -103,7 +103,9 @@ router.post('/razorpay/guest-order', async (req, res) => {
 
   try {
     const { lineItems, subtotal } = await resolvePricedLineItems(normalizedItems);
-    const { code: resolvedCoupon, discount } = await resolveCoupon(couponCode, subtotal, null);
+    // a guest is recognised by e-mail so a "once per customer" code cannot be reused by checking out as a guest again
+    const known = isValidEmail(email) ? must(await supabase.from('users').select('id').ilike('email', String(email).trim()).maybeSingle(), 'guestOrder:knownUser') : null;
+    const { code: resolvedCoupon, discount } = await resolveCoupon(couponCode, subtotal, known ? known.id : null);
     const { total, shippingFee } = await computeOrderTotals(subtotal, discount);
 
     const rzpOrder = await razorpay.createOrder(total, 'chk_' + Date.now().toString(36));

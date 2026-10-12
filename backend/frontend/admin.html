@@ -3985,7 +3985,7 @@
           <div class="detail-grid">
             <div class="detail-block">
               <h5>Profile</h5>
-              <p>${escHTML(c.email)}<br>${c.phone || 'No phone on file'}<br>Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</p>
+              <p>${escHTML(c.email)}<br>${c.phone ? escHTML(c.phone) : 'No phone on file'}<br>Joined ${new Date(c.createdAt).toLocaleDateString('en-IN')}</p>
             </div>
             <div class="detail-block">
               <h5>Flag &amp; Notes</h5>

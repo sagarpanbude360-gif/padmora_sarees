@@ -179,13 +179,13 @@
       box.innerHTML = addresses.length ? addresses.map(a=>`
         <div class="order-card">
           <div class="order-card-head">
-            <span><strong>${a.label}</strong>${a.is_default ? ' · Default' : ''}</span>
+            <span><strong>${escHTML(a.label)}</strong>${a.is_default ? ' · Default' : ''}</span>
             <span>
               <span class="cancel-order-btn" data-edit-addr="${a.id}" style="margin-top:0;">Edit</span>
               <span class="cancel-order-btn" data-del-addr="${a.id}" style="margin-top:0;margin-left:12px;">Delete</span>
             </span>
           </div>
-          <p style="font-size:13px;color:var(--ink-soft);">${a.name ? a.name+', ' : ''}${a.line1}, ${a.city}, ${a.state} ${a.pincode}${a.phone ? ' · '+a.phone : ''}</p>
+          <p style="font-size:13px;color:var(--ink-soft);">${a.name ? escHTML(a.name)+', ' : ''}${escHTML(a.line1)}, ${escHTML(a.city)}, ${escHTML(a.state)} ${escHTML(a.pincode)}${a.phone ? ' · '+escHTML(a.phone) : ''}</p>
         </div>`).join('') : `<p style="color:var(--ink-soft);font-size:13px;">No saved addresses yet.</p>`;
       document.querySelectorAll('[data-del-addr]').forEach(el=>el.addEventListener('click', async ()=>{
         try{

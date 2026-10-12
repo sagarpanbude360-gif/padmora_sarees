@@ -561,29 +561,49 @@ async function seedReviews() {
   must(await supabase.from('reviews').insert(rows), 'seedReviews');
 }
 
-async function seedAdmin() {
-  const email = process.env.ADMIN_EMAIL || 'admin@padmora.store';
-  const existing = must(await supabase.from('users').select('id').ilike('email', email).maybeSingle(), 'seedAdmin:lookup');
-  if (existing) {
-    must(await supabase.from('users').update({ is_admin: true }).eq('id', existing.id), 'seedAdmin:update');
-    return;
+// The first admin account is only ever created from credentials that YOU set (ADMIN_EMAIL and ADMIN_PASSWORD in the hosting settings).
+// There is no built-in default password: if they are missing or weak, no account is created (and an existing account is never touched).
+const WEAK_ADMIN_PASSWORDS = new Set(['changeme123!', 'replace_this_with_a_strong_unique_password', 'admin', 'admin123', 'password', 'password123', 'padmora', 'padmora123']);
+function adminSeedCredentials(forWhat) {
+  const email = String(process.env.ADMIN_EMAIL || '').trim();
+  const password = String(process.env.ADMIN_PASSWORD || '');
+  if (!email || !password) {
+    console.error(`[seed] No ${forWhat} account exists yet and ADMIN_EMAIL / ADMIN_PASSWORD are not both set, so none was created. Set both (a strong password, 12+ characters) in the hosting settings and restart once.`);
+    return null;
   }
-  const password = process.env.ADMIN_PASSWORD || 'ChangeMe123!';
+  if (password.length < 12 || WEAK_ADMIN_PASSWORDS.has(password.toLowerCase())) {
+    console.error(`[seed] ADMIN_PASSWORD is too weak (use 12+ characters and nothing guessable), so the ${forWhat} account was not created.`);
+    return null;
+  }
+  return { email, password };
+}
+
+async function seedAdmin() {
+  const email = String(process.env.ADMIN_EMAIL || '').trim();
+  if (email) {
+    const existing = must(await supabase.from('users').select('id').ilike('email', email).maybeSingle(), 'seedAdmin:lookup');
+    if (existing) {
+      must(await supabase.from('users').update({ is_admin: true }).eq('id', existing.id), 'seedAdmin:update');
+      return;
+    }
+  }
+  const creds = adminSeedCredentials('customer-side admin');
+  if (!creds) return;
   const id = 'admin_' + Date.now().toString(36);
   must(await supabase.from('users').insert({
-    id, name: 'Padmora Admin', email, password: bcrypt.hashSync(password, 10),
+    id, name: 'Padmora Admin', email: creds.email, password: bcrypt.hashSync(creds.password, 10),
     phone: '', address_line1: '', address_city: '', address_state: '', address_pincode: '',
     created_at: new Date().toISOString(), is_admin: true
   }), 'seedAdmin:insert');
 }
 
 async function seedAdminUsers() {
-  if (await tableCount('admin_users') > 0) return;
-  const email = process.env.ADMIN_EMAIL || 'admin@padmora.store';
-  const password = process.env.ADMIN_PASSWORD || 'ChangeMe123!';
+  if (await tableCount('admin_users') > 0) return;   // an existing admin is never created again, changed or reset
+  const creds = adminSeedCredentials('admin');
+  if (!creds) return;
   const id = 'adm_' + Date.now().toString(36);
   must(await supabase.from('admin_users').insert({
-    id, name: 'Yashi (Founder)', email, password: bcrypt.hashSync(password, 10),
+    id, name: 'Yashi (Founder)', email: creds.email, password: bcrypt.hashSync(creds.password, 10),
     role: 'Super Admin', active: true, created_at: new Date().toISOString()
   }), 'seedAdminUsers');
 }
@@ -620,5 +640,6 @@ module.exports = {
   getReelItems, getFaqItems, logSearchQuery,
   ADMIN_ROLES, logActivity,
   logNotification,
-  must, tableCount
+  must, tableCount,
+  adminSeedCredentials   // exported so the start-up rules can be tested
 };

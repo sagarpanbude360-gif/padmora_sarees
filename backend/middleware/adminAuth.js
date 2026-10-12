@@ -6,9 +6,17 @@
 // requireAuth, because each only recognizes its own payload field.
 const jwt = require('jsonwebtoken');
 const { supabase, must } = require('../utils/db');
+const crypto = require('crypto');
+const { jwtSecret } = require('../utils/secrets');
 
-function signAdminToken(adminId) {
-  return jwt.sign({ adminId }, process.env.JWT_SECRET || 'dev_secret', { expiresIn: '12h' });
+// A short fingerprint of the admin's current password hash goes into the token: changing or resetting that admin's password makes every
+// token issued before it stop working at once (the same effect "token_version" has for customers). A token made without it (the
+// 12-hour sessions that were open when this was added) is still accepted until it expires.
+const passwordTag = hash => crypto.createHash('sha256').update(String(hash || '')).digest('hex').slice(0, 16);
+
+function signAdminToken(adminId, passwordHash) {
+  const claims = passwordHash ? { adminId, ph: passwordTag(passwordHash) } : { adminId };
+  return jwt.sign(claims, jwtSecret(), { algorithm: 'HS256', expiresIn: '12h' });
 }
 
 async function requireAdminAuth(req, res, next) {
@@ -17,12 +25,13 @@ async function requireAdminAuth(req, res, next) {
   if (!token) return res.status(401).json({ message: 'Please log in to the admin dashboard.' });
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+    const payload = jwt.verify(token, jwtSecret(), { algorithms: ['HS256'] });
     if (!payload.adminId) return res.status(401).json({ message: 'Invalid admin session.' });
 
     const admin = must(await supabase.from('admin_users').select('*').eq('id', payload.adminId).maybeSingle(), 'requireAdminAuth');
     if (!admin) return res.status(401).json({ message: 'Admin account not found.' });
     if (!admin.active) return res.status(403).json({ message: 'This admin account has been deactivated.' });
+    if (payload.ph && payload.ph !== passwordTag(admin.password)) return res.status(401).json({ message: 'Your admin session has expired. Please log in again.' });
 
     req.adminId = admin.id;
     req.adminName = admin.name;

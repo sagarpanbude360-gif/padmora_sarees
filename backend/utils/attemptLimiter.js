@@ -2,8 +2,9 @@
 // order cancellation). Counts only *failed* verifications, so a genuine
 // customer who types the right email first time is never slowed down, while
 // someone guessing order-ID/email combinations gets cut off quickly.
-// In-memory is enough here: the app runs as a single Node process, and a
-// restart only ever resets the counters, never opens anything else up.
+// The counters live in this process's memory: a restart empties them, and a host that runs several copies of the app counts each
+// copy separately (so the real limit can be up to N times higher). Limits that must hold regardless (login codes) are ALSO enforced
+// in the database, see utils/otp.js. The numbers are chosen so people who share one address (a phone network, an office) are not hurt.
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ENTRIES = 5000;
 
@@ -37,10 +38,18 @@ function clearFailures(key) {
   buckets.delete(key);
 }
 
-// The caller's address as seen behind Hostinger's proxy (first X-Forwarded-For entry).
-function clientIp(req) {
-  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  return forwarded || req.ip || 'unknown';
+// The caller's address (see utils/proxy.js: only the part of X-Forwarded-For that our own proxy added is believed).
+const { clientIp } = require('./proxy');
+
+// Counts EVERY attempt (not only failures) in its own window and says whether this one is over the limit - for things like contact
+// messages or file uploads where each use costs us something. -> { blocked, retryAfterSec }
+function hit(key, max, windowMs) {
+  const now = Date.now();
+  prune(now);
+  let b = buckets.get(key);
+  if (!b || b.resetAt <= now) { b = { count: 0, resetAt: now + (windowMs || WINDOW_MS) }; buckets.set(key, b); }
+  b.count++;
+  return { blocked: b.count > max, retryAfterSec: Math.max(1, Math.ceil((b.resetAt - now) / 1000)) };
 }
 
-module.exports = { isBlocked, recordFailure, clearFailures, clientIp };
+module.exports = { isBlocked, recordFailure, clearFailures, clientIp, hit };

@@ -4,6 +4,10 @@ const { requireAuth } = require('../middleware/auth');
 const { computeStatus } = require('../utils/orderStatus');
 const { uploadReturnPhotos } = require('../middleware/upload');
 const { saveUpload, isCustomerPhotoUrl } = require('../utils/storage');
+const { hit } = require('../utils/attemptLimiter');
+
+// a ceiling on photos per account per hour, checked before the file is read
+const uploadLimit = (req, res, next) => (hit('upload:user:' + req.userId, 40, 60 * 60 * 1000).blocked ? res.status(429).json({ message: 'You have uploaded a lot of photos in a short time. Please wait a while and try again.' }) : next());
 
 // Mounted at /api/products/:productId/reviews with mergeParams so req.params.productId is available.
 const router = express.Router({ mergeParams: true });
@@ -45,7 +49,7 @@ function uploadPhotos(req, res, next) {
     next();
   });
 }
-router.post('/photos', requireAuth, uploadPhotos, async (req, res) => {
+router.post('/photos', requireAuth, uploadLimit, uploadPhotos, async (req, res) => {
   if (!req.files || !req.files.length) return res.status(400).json({ message: 'No photos uploaded.' });
   try {
     const save = Promise.all(req.files.map(f => saveUpload(f, 'review-')));
@@ -55,6 +59,7 @@ router.post('/photos', requireAuth, uploadPhotos, async (req, res) => {
     ]);
     res.status(201).json({ urls });
   } catch (err) {
+    if (err.badType) return res.status(400).json({ message: err.message });
     console.error('POST /reviews/photos failed:', err);
     if (err.timedOut) return res.status(504).json({ message: 'Saving the photo took too long. Please try again.' });
     res.status(502).json({ message: 'The photos could not be saved. Please try again in a moment.' });

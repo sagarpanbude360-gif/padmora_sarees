@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { supabase, must } = require('../utils/db');
+const { jwtSecret } = require('../utils/secrets');
 
 async function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
@@ -10,7 +11,7 @@ async function requireAuth(req, res, next) {
   }
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+    const payload = jwt.verify(token, jwtSecret(), { algorithms: ['HS256'] });
     // An admin token (payload.adminId, no userId) is a different credential
     // entirely — reject it here rather than silently proceeding as an
     // anonymous/undefined customer.
@@ -65,7 +66,7 @@ async function getUserIdIfPresent(req) {
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) return null;
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+    const payload = jwt.verify(token, jwtSecret(), { algorithms: ['HS256'] });
     if (!payload.userId) return null;
     const user = must(await supabase.from('users').select('token_version').eq('id', payload.userId).maybeSingle(), 'getUserIdIfPresent');
     if (!user || payload.tv !== user.token_version) return null;

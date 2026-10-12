@@ -41,7 +41,7 @@ function headerIconsHTML() {
   const user = getStoredUser();
   const accountHref = isLoggedIn() ? '/account' : '/login';
   const accountInner = isLoggedIn()
-    ? `<span class="account-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>${(user && user.name) ? user.name.split(' ')[0] : 'Account'}</span>`
+    ? `<span class="account-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>${(user && user.name) ? escHTML(user.name.split(' ')[0]) : 'Account'}</span>`
     : `<button class="icon-btn" aria-label="Account"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button>`;
 
   return `

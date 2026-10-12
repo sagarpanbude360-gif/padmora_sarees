@@ -186,7 +186,7 @@ router.put('/:itemId', async (req, res) => {
     const finalQty = variant ? Math.min(requested, variant.stock) : requested;
 
     const [updRes, touchRes] = await Promise.all([
-      supabase.from('cart_items').update({ qty: finalQty, updated_at: new Date().toISOString() }).eq('id', req.params.itemId),
+      supabase.from('cart_items').update({ qty: finalQty, updated_at: new Date().toISOString() }).eq('id', req.params.itemId).eq('user_id', req.userId),
       supabase.from('cart_meta').upsert({ user_id: req.userId, recovery_email_sent_at: null }, { onConflict: 'user_id' })
     ]);
     must(updRes, 'putItem:update');

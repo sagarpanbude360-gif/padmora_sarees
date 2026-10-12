@@ -137,7 +137,7 @@
       document.getElementById('savedAddressList').innerHTML = addresses.map((a,i)=>`
         <label class="pay-option ${i===0?'active':''}">
           <input type="radio" name="savedAddr" value="${a.id}" ${i===0?'checked':''}>
-          <strong>${a.label}</strong>: ${a.line1}, ${a.city} ${a.pincode}
+          <strong>${escHTML(a.label)}</strong>: ${escHTML(a.line1)}, ${escHTML(a.city)} ${escHTML(a.pincode)}
         </label>`).join('');
       document.querySelectorAll('input[name="savedAddr"]').forEach(r=>r.addEventListener('change', ()=>{
         document.querySelectorAll('#savedAddressList .pay-option').forEach(l=>l.classList.remove('active'));
