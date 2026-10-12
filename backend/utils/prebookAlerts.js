@@ -37,10 +37,10 @@ async function checkPrebookNotifications(variantId) {
     const productName = productNameById[variant.product_id];
     await sendEmail({
       to: row.email,
-      subject: `${productName} — ${variant.color_name} is back in stock!`,
+      subject: `${productName} (${variant.color_name}) is back in stock!`,
       html: `<div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;">
         <h2 style="color:#7A1F2B;">Good news, ${row.name || 'there'}!</h2>
-        <p>You asked to be told when <strong>${productName} — ${variant.color_name}</strong> was back — it's in stock now, with ${variant.stock} available.</p>
+        <p>You asked to be told when <strong>${productName} (${variant.color_name})</strong> was back. It's in stock now, with ${variant.stock} available.</p>
         <p><a href="${SITE_URL}/product?id=${variant.product_id}" style="color:#7A1F2B;font-weight:bold;">View it now →</a></p>
         <p style="color:#6f5a5c;font-size:12.5px;">It's first-come, first-served, so it's worth not waiting too long.</p>
       </div>`,

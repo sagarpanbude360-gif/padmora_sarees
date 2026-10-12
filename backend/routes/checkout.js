@@ -23,7 +23,7 @@ function cleanItems(raw) {
 router.post('/quote', async (req, res) => {
   try {
     const items = cleanItems(req.body && req.body.items);
-    if (!items.length) return res.status(400).json({ message: 'Nothing to buy — choose a saree first.' });
+    if (!items.length) return res.status(400).json({ message: 'Nothing to buy. Choose a saree first.' });
 
     const [products, variants, photoByVariant] = await Promise.all([
       getProductsByIds(items.map(i => i.product_id)),

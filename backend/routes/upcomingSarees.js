@@ -62,7 +62,7 @@ router.post('/:id(\\d{1,9})/notify-me', async (req, res) => {
       upcoming_saree_id: id, email: String(email).toLowerCase().trim(), name: name || null, created_at: new Date().toISOString()
     }, { onConflict: 'upcoming_saree_id,email', ignoreDuplicates: true }), 'notifyMe:insert');
 
-    res.status(201).json({ message: "You're on the list — we'll email you the moment it launches." });
+    res.status(201).json({ message: "You're on the list. We'll email you the moment it launches." });
   } catch (err) {
     console.error('POST /upcoming-sarees/:id/notify-me failed:', err);
     res.status(500).json({ message: 'Something went wrong on the server.' });

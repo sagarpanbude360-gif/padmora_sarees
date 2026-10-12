@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-192.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
-<title>Track Your Order — Padmora Sarees by Yashi</title>
+<title>Track Your Order | Padmora Sarees by Yashi</title>
 <meta name="description" content="Track your Padmora order and see where your saree is.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="preload" href="/fonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -35,7 +35,7 @@
         <input type="text" id="contactInput" placeholder="Email or phone used at checkout" style="display:none;">
         <button class="btn btn-primary" id="trackBtn">Track</button>
       </div>
-      <p id="guestTrackHint" style="display:none;font-size:12px;color:var(--ink-soft);margin:-10px 0 18px;">Checking on a guest order? Enter the Order ID plus the email or phone you used at checkout — no login needed.</p>
+      <p id="guestTrackHint" style="display:none;font-size:12px;color:var(--ink-soft);margin:-10px 0 18px;">Checking on a guest order? Enter the Order ID plus the email or phone you used at checkout. No login is needed.</p>
 
       <div id="orderPicker"></div>
       <div id="trackResult"></div>
@@ -233,7 +233,7 @@
       });
       renderTracker(order);
       updateGuestCancelBox(order);
-      toast('Cancellation request submitted — we\'ll review it shortly.');
+      toast('Cancellation request submitted. We\'ll review it shortly.');
     }catch(e){
       toast(e.message, 'error');
       btn.disabled = false;

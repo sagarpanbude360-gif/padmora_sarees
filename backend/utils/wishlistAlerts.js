@@ -37,7 +37,7 @@ async function checkWishlistAlerts() {
         subject: `${product.name} is back in stock!`,
         html: `<div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;">
           <h2 style="color:#7A1F2B;">Good news, ${user.name || 'there'}!</h2>
-          <p><strong>${product.name}</strong> is back in stock — only ${product.stock} left.</p>
+          <p><strong>${product.name}</strong> is back in stock. Only ${product.stock} left.</p>
           <p><a href="${SITE_URL}/product?id=${product.id}" style="color:#7A1F2B;">View it in your wishlist</a></p>
         </div>`,
         userId: row.user_id

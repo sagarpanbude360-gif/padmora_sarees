@@ -63,7 +63,7 @@ router.post('/razorpay/order', requireAuth, async (req, res) => {
       sourceItems = items.slice(0, 20)
         .filter(i => i && Number(i.productId) > 0 && Number(i.qty) > 0)
         .map(i => ({ product_id: Number(i.productId), variant_id: i.variantId ? Number(i.variantId) : null, qty: Math.min(99, Math.max(1, Math.floor(Number(i.qty) || 1))), color: i.color }));
-      if (!sourceItems.length) return res.status(400).json({ message: 'Nothing to buy — choose a saree first.' });
+      if (!sourceItems.length) return res.status(400).json({ message: 'Nothing to buy. Choose a saree first.' });
     } else {
       sourceItems = must(await supabase.from('cart_items').select('*').eq('user_id', req.userId), 'razorpayOrder:cart');
       if (!sourceItems.length) return res.status(400).json({ message: 'Your bag is empty.' });
@@ -127,7 +127,7 @@ router.post('/razorpay/verify', async (req, res) => {
     return res.status(400).json({ message: 'Missing payment confirmation details.' });
   }
   if (!razorpay.verifySignature({ razorpay_order_id, razorpay_payment_id, razorpay_signature })) {
-    return res.status(400).json({ message: 'Payment could not be verified. If money was deducted, it will be auto-refunded by Razorpay within a few days — contact us if you do not see it.' });
+    return res.status(400).json({ message: 'Payment could not be verified. If money was deducted, it will be auto-refunded by Razorpay within a few days. Contact us if you do not see it.' });
   }
 
   try {

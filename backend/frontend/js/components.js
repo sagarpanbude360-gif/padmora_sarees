@@ -123,7 +123,7 @@ function initHeader(activeHref) {
         <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
         </button>
-        <a href="/" class="logo" aria-label="Padmora — home"><img src="images/padmora-lotus-sm.webp" alt="" class="logo-mark" width="40" height="28"><span class="logo-text-stage" aria-hidden="true"><span class="logo-text-el active" id="logoTextEn">Padmora</span><span class="logo-text-el lang-mr" id="logoTextMr">पद्मोरा</span></span></a>
+        <a href="/" class="logo" aria-label="Padmora home"><img src="images/padmora-lotus-sm.webp" alt="" class="logo-mark" width="40" height="28"><span class="logo-text-stage" aria-hidden="true"><span class="logo-text-el active" id="logoTextEn">Padmora</span><span class="logo-text-el lang-mr" id="logoTextMr">पद्मोरा</span></span></a>
         <nav class="main-nav">
           ${NAV_LINKS.map(l => l.dropdown ? `
             <div class="nav-item">
@@ -338,7 +338,7 @@ function initFooter() {
   // defaults match what the admin starts with, so the footer is complete even
   // before the settings arrive (or if they can't be fetched).
   const FOOTER_DEFAULT = {
-    tagline: 'Bringing handloom weavers and heritage crafts directly to your wardrobe — one drape at a time.',
+    tagline: 'Bringing handloom weavers and heritage crafts directly to your wardrobe, one drape at a time.',
     columns: [
       { title: 'Customer Care', links: [{ label: 'Track Order', url: '/track-order' }, { label: 'Order Inquiry', url: '/order-inquiry' }, { label: 'Policies', url: '/policies' }, { label: 'FAQ', url: '/faq' }, { label: 'Contact Us', url: '/contact' }] },
       { title: 'Company', links: [{ label: 'About Padmora', url: '/about' }] }
@@ -590,7 +590,7 @@ function initSearchOverlay() {
     <div class="search-overlay" id="searchOverlay">
       <div class="search-input-row">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input type="text" id="instantSearchInput" placeholder="Search sarees — try 'red saree' or 'maheshwari'">
+        <input type="text" id="instantSearchInput" placeholder="Search sarees, try 'red saree' or 'maheshwari'">
         <button id="searchCloseBtn" aria-label="Close">&times;</button>
       </div>
       <div class="search-results" id="searchResultsBody"></div>
@@ -619,7 +619,7 @@ function initSearchOverlay() {
 
 function renderSearchIdle() {
   const body = document.getElementById('searchResultsBody');
-  if (body) body.innerHTML = `<p class="search-hint">Start typing to see matching sarees — by name, weave, or color.</p>`;
+  if (body) body.innerHTML = `<p class="search-hint">Start typing to see matching sarees by name, weave or color.</p>`;
 }
 
 function openSearchOverlay() {
@@ -643,7 +643,7 @@ async function runInstantSearch(query) {
   try {
     const { products } = await apiFetch('/products?search=' + encodeURIComponent(query));
     if (!products.length) {
-      body.innerHTML = `<p class="search-hint">No sarees match "${query}" yet — try a weave name like Ajrakh or Paithani.</p>`;
+      body.innerHTML = `<p class="search-hint">No sarees match "${query}" yet. Try a weave name like Ajrakh or Paithani.</p>`;
       return;
     }
     const top = products.slice(0, 6);
@@ -657,7 +657,7 @@ async function runInstantSearch(query) {
       </div>
       <a class="search-view-all" href="/shop?search=${encodeURIComponent(query)}">See all results for "${query}" →</a>`;
   } catch (e) {
-    body.innerHTML = `<p class="search-hint">Could not search right now — please try again.</p>`;
+    body.innerHTML = `<p class="search-hint">Could not search right now. Please try again.</p>`;
   }
 }
 
@@ -797,7 +797,7 @@ async function updateFinderCount() {
   try {
     const { total } = await apiFetch('/products?' + finderQuery(FINDER_STATE, { withLimit: 1 }).toString());
     if (run !== finderRun || !document.getElementById('finderCount')) return;
-    el.textContent = total === 0 ? 'No exact match yet — we will find the closest.' : `${total} saree${total === 1 ? '' : 's'} to choose from`;
+    el.textContent = total === 0 ? 'No exact match yet. We will find the closest.' : `${total} saree${total === 1 ? '' : 's'} to choose from`;
   } catch (e) { /* the count is a nicety; the quiz works without it */ }
 }
 
@@ -845,9 +845,9 @@ async function renderFinderResults() {
     // shopper always sees real sarees — and is told when they are "closest" picks rather than exact matches.
     const attempts = [
       { state: FINDER_STATE, note: '' },
-      { state: { ...FINDER_STATE, fabric: '' }, note: 'No exact match for that weave — here are the closest picks.' },
-      { state: { ...FINDER_STATE, fabric: '', budget: -1 }, note: 'Nothing in that budget — here are the closest picks.' },
-      { state: { occasion: '', budget: -1, fabric: '' }, note: 'Nothing matched exactly — here are our most loved sarees.' }
+      { state: { ...FINDER_STATE, fabric: '' }, note: 'No exact match for that weave. Here are the closest picks.' },
+      { state: { ...FINDER_STATE, fabric: '', budget: -1 }, note: 'Nothing in that budget. Here are the closest picks.' },
+      { state: { occasion: '', budget: -1, fabric: '' }, note: 'Nothing matched exactly. Here are our most loved sarees.' }
     ];
     let products = [], note = '', used = FINDER_STATE, total = 0;
     for (const a of attempts) {

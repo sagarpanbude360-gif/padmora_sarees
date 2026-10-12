@@ -2460,7 +2460,7 @@ router.post('/upcoming-sarees/:id(\\d{1,9})/notify', asyncRoute(async (req, res)
       subject: `${entry.name} is here!`,
       html: `<div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;">
         <h2 style="color:#7A1F2B;">Good news, ${row.name || 'there'}!</h2>
-        <p>You asked to be told when <strong>${entry.name}</strong> launched — it's live now.</p>
+        <p>You asked to be told when <strong>${entry.name}</strong> launched. It's live now.</p>
         <p><a href="${process.env.SITE_URL || 'https://padmorasarees.com'}/shop" style="color:#7A1F2B;font-weight:bold;">Shop now →</a></p>
       </div>`
     });

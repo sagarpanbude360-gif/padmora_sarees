@@ -7,10 +7,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-192.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
-<title>Shop All Sarees — Padmora Sarees by Yashi</title>
-<meta name="description" content="Browse our full collection of handloom sarees — Maheshwari, Ajrakh, Paithani and Narayanpet — filterable by fabric, occasion and price.">
+<title>Shop All Sarees | Padmora Sarees by Yashi</title>
+<meta name="description" content="Browse our full collection of handloom sarees (Maheshwari, Ajrakh, Paithani and Narayanpet), filterable by fabric, occasion and price.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Shop All Sarees — Padmora Sarees by Yashi">
+<meta property="og:title" content="Shop All Sarees | Padmora Sarees by Yashi">
 <meta property="og:description" content="Browse our full collection of handloom sarees, filterable by fabric, occasion and price.">
 <link rel="preconnect" href="https://fxjlgsatgajagzqdokbe.supabase.co" crossorigin>
 <link rel="preload" href="/fonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -35,7 +35,7 @@
     <div class="container">
       <p class="breadcrumb" id="shopBreadcrumb"><a href="/">Home</a> / All Sarees</p>
       <h1 id="shopTitle">Shop All Sarees</h1>
-      <p id="shopSubtitle">Every weave, every occasion — filter to find the one.</p>
+      <p id="shopSubtitle">Every weave, every occasion. Filter to find the one.</p>
     </div>
   </div>
 
@@ -151,7 +151,7 @@
     const banner = document.querySelector('.page-banner');
     if(!collectionData){ hero.style.display = 'none'; meaning.style.display = 'none'; banner.style.display = ''; return; }
     const c = collectionData.collection;
-    document.title = c.name + ' — Padmora Sarees by Yashi';
+    document.title = c.name + ' | Padmora Sarees by Yashi';
     const desc = document.querySelector('meta[name="description"]');
     if(desc) desc.setAttribute('content', c.description || c.tagline || ('The ' + c.name + ' collection from Padmora.'));
     banner.style.display = 'none';
@@ -488,7 +488,7 @@
       if(my !== requestSeq) return;
       if(append) return;   // the next scroll tries again
       document.getElementById('resultCount').textContent = '';
-      document.getElementById('productGrid').innerHTML = `<p style="grid-column:1/-1;text-align:center;color:var(--ink-soft);">Could not load products — is the backend server running?</p>`;
+      document.getElementById('productGrid').innerHTML = `<p style="grid-column:1/-1;text-align:center;color:var(--ink-soft);">We could not load products. Please refresh the page or try again in a moment.</p>`;
       document.getElementById('loadMoreWrap').style.display = 'none';
     }
   }

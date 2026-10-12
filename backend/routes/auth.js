@@ -78,7 +78,7 @@ async function emailCode({ to, code, purpose, name }) {
     <p>Hi ${first.replace(/[<>&]/g, '')},</p>
     <p>Use this code to ${what}:</p>
     <p style="font-size:32px;font-weight:700;letter-spacing:8px;color:#7A1F2B;margin:18px 0;">${code}</p>
-    <p style="font-size:13px;color:#6f5a5c;">It works for 10 minutes and only once. If you did not ask for it, you can ignore this e-mail &mdash; nobody can sign in without it.</p>
+    <p style="font-size:13px;color:#6f5a5c;">It works for 10 minutes and only once. If you did not ask for it, you can ignore this e-mail. Nobody can sign in without it.</p>
   </div>`;
   const result = await sendEmail({ to, subject, html, text: `Your Padmora code is ${code}. It works for 10 minutes. If you did not ask for it, ignore this e-mail.` });
   if (result.status === 'sent') return null;
@@ -105,7 +105,7 @@ router.post('/register/start', async (req, res) => {
     const cleanEmail = String(email).trim();
     const exists = must(await supabase.from('users').select('id, is_guest, status').ilike('email', cleanEmail).maybeSingle(), 'registerStart:lookup');
     if (exists && !exists.is_guest) {
-      return res.status(409).json({ message: 'An account with this email already exists. Log in — we will e-mail you a code.', exists: true });
+      return res.status(409).json({ message: 'An account with this email already exists. Log in and we will e-mail you a code.', exists: true });
     }
     const code = await createOtp(cleanEmail, 'register');
     if (!code) return res.status(429).json({ message: 'A code was just sent. Please wait a minute before asking for another.' });

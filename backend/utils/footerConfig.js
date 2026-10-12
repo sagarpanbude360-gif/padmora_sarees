@@ -1,7 +1,7 @@
 // Storefront footer content (tagline, link columns, bottom line) — edited in Admin → Settings → Footer.
 // Contact email and social links stay in Store Info; this holds everything else the footer shows.
 const DEFAULT_FOOTER = {
-  tagline: 'Bringing handloom weavers and heritage crafts directly to your wardrobe — one drape at a time.',
+  tagline: 'Bringing handloom weavers and heritage crafts directly to your wardrobe, one drape at a time.',
   columns: [
     { title: 'Customer Care', links: [
       { label: 'Track Order', url: '/track-order' },

@@ -63,13 +63,13 @@ function buildReviewReminderEmail({ name, orderId, items }) {
       <tr><td style="padding:30px 28px 8px;font-family:Georgia,serif;color:#3d2229;">
         <div style="font-size:22px;color:#7a1f2b;margin-bottom:12px;">Dear ${esc(first)},</div>
         <p style="font-size:16px;line-height:1.65;margin:0 0 12px;">${single ? 'Your saree has had a few days to settle into your wardrobe' : 'Your sarees have had a few days to settle into your wardrobe'}, and we hope ${single ? 'it has' : 'they have'} been everything you imagined.</p>
-        <p style="font-size:16px;line-height:1.65;margin:0 0 6px;">Every Padmora saree is woven by hand. Your honest words &mdash; and a photo, if you can &mdash; help another woman choose with confidence, and help our weavers&rsquo; craft be seen. It takes about a minute.</p>
+        <p style="font-size:16px;line-height:1.65;margin:0 0 6px;">Every Padmora saree is woven by hand. Your honest words, and a photo if you can, help another woman choose with confidence, and help our weavers&rsquo; craft be seen. It takes about a minute.</p>
       </td></tr>
       <tr><td style="padding:6px 28px 4px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(card).join('')}</table>
       </td></tr>
       <tr><td style="padding:14px 28px 6px;font-family:Arial,sans-serif;font-size:13px;line-height:1.6;color:#6b5a5c;">
-        <b style="color:#4a1220;">Tip:</b> a photo taken with your phone camera, in daylight, helps the most &mdash; the review form opens your camera for you.
+        <b style="color:#4a1220;">Tip:</b> a photo taken with your phone camera, in daylight, helps the most. The review form opens your camera for you.
       </td></tr>
       <tr><td style="padding:16px 28px 28px;font-family:Arial,sans-serif;font-size:13px;line-height:1.6;color:#6b5a5c;">
         Something not quite right with your order? Just reply to this e-mail and we will make it right.<br><br>

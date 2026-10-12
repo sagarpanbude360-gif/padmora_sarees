@@ -7,10 +7,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-192.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
-<title>Collections — Padmora Sarees by Yashi</title>
+<title>Collections | Padmora Sarees by Yashi</title>
 <meta name="description" content="Explore Padmora's curated saree collections, each a different story told in weave.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Collections — Padmora Sarees by Yashi">
+<meta property="og:title" content="Collections | Padmora Sarees by Yashi">
 <meta property="og:description" content="Explore Padmora's curated saree collections, each a different story told in weave.">
 <link rel="preconnect" href="https://fxjlgsatgajagzqdokbe.supabase.co" crossorigin>
 <link rel="preload" href="/fonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -55,9 +55,9 @@
           <div class="weave-art" style="${(c.thumbnail || c.bannerImage) ? `background:url('${c.thumbnail || c.bannerImage}') center/cover;` : `background:${COLLECTION_CARD_GRADIENTS[i % COLLECTION_CARD_GRADIENTS.length]};`}"></div>
           <div class="weave-card-body">${c.tagline ? `<span>${c.tagline}</span>` : ''}<h4>${c.name}</h4>${c.description ? `<p>${c.description}</p>` : ''}</div>
         </a>`).join('') :
-        `<p style="text-align:center;color:var(--ink-soft);grid-column:1/-1;">No collections live yet — check back soon.</p>`;
+        `<p style="text-align:center;color:var(--ink-soft);grid-column:1/-1;">No collections are live yet. Please check back soon.</p>`;
     }catch(e){
-      document.getElementById('collectionsGrid').innerHTML = `<p style="text-align:center;color:var(--ink-soft);grid-column:1/-1;">Could not load collections — is the backend server running?</p>`;
+      document.getElementById('collectionsGrid').innerHTML = `<p style="text-align:center;color:var(--ink-soft);grid-column:1/-1;">We could not load collections. Please refresh the page or try again in a moment.</p>`;
     }
   }
   loadCollections();

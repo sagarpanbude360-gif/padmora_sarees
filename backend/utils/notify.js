@@ -123,7 +123,7 @@ async function sendSms({ to, body, orderId, userId }) {
 
 function orderConfirmationEmailHtml(order, customerName) {
   const rows = order.items.map(li =>
-    `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee;">${li.name}${li.color ? ' — ' + li.color : ''}</td>
+    `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee;">${li.name}${li.color ? ' · ' + li.color : ''}</td>
      <td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center;">${li.qty}</td>
      <td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right;">₹${li.price}</td></tr>`
   ).join('');
@@ -147,7 +147,7 @@ function orderConfirmationEmailHtml(order, customerName) {
     <p>Shipping to: ${[order.address.line1, [order.address.city, order.address.state].filter(Boolean).join(', '), order.address.pincode && !String(order.address.line1 || '').includes(order.address.pincode) ? order.address.pincode : ''].filter(Boolean).join(', ')}</p>
     <p>Payment method: ${order.payment}</p>
     <p style="margin-top:24px;color:#999;font-size:12px;">You can track this order anytime at ${SITE_URL.replace(/^https?:\/\//, '')}/track-order</p>
-    <p style="margin-top:10px;color:#999;font-size:12px;">Once it is delivered, any problem with it can be raised from your <a href="${inquiryLink(order.id)}" style="color:#7A1F2B;">order inquiry page</a> &mdash; no login needed.</p>
+    <p style="margin-top:10px;color:#999;font-size:12px;">Once it is delivered, any problem with it can be raised from your <a href="${inquiryLink(order.id)}" style="color:#7A1F2B;">order inquiry page</a>. No login is needed.</p>
   </div>`;
 }
 
@@ -184,10 +184,10 @@ function sendOrderConfirmation(order, customer) {
 // caller's background loop, never inline in a request; a failure is logged to
 // notifications_log by sendEmail and must not stop the rest of a batch.
 const STATUS_EMAIL = {
-  'Packed': { subject: 'is packed', headline: 'Your order is packed', body: "Good news — your saree has been carefully packed and is getting ready to ship." },
+  'Packed': { subject: 'is packed', headline: 'Your order is packed', body: "Good news: your saree has been carefully packed and is getting ready to ship." },
   'Shipped': { subject: 'has shipped', headline: 'Your order has shipped', body: "Your order is on its way. We'll update the tracking page as it moves." },
   'Out for Delivery': { subject: 'is out for delivery', headline: 'Out for delivery today', body: "Your order is out for delivery and should reach you soon. Please keep your phone handy." },
-  'Delivered': { subject: 'has been delivered', headline: 'Your order has been delivered', body: "Your order has been delivered. We hope you love it — thank you for shopping with Padmora." }
+  'Delivered': { subject: 'has been delivered', headline: 'Your order has been delivered', body: "Your order has been delivered. We hope you love it. Thank you for shopping with Padmora." }
 };
 
 async function sendOrderStatusEmail(order, customer, status) {
@@ -202,7 +202,7 @@ async function sendOrderStatusEmail(order, customer, status) {
       <p>Hi ${esc((customer && customer.name) || 'there')},</p>
       <p>${tpl.body}</p>
       <p style="font-size:13px;color:#666;">Order ID: <strong>${esc(order.id)}</strong></p>
-      ${status === 'Delivered' ? `<p style="margin-top:18px;">Is something not right with your saree? You have 7 days to tell us:</p><p><a href="${inquiryLink(order.id)}" style="display:inline-block;background:#ad3b5c;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-family:Arial,sans-serif;font-weight:bold;">Order inquiry (return &amp; refund)</a></p><p style="font-size:12px;color:#8a6f6f;">No login needed &mdash; this private link is for your order only. You will need 3 photos of the saree.</p>` : ''}
+      ${status === 'Delivered' ? `<p style="margin-top:18px;">Is something not right with your saree? You have 7 days to tell us:</p><p><a href="${inquiryLink(order.id)}" style="display:inline-block;background:#ad3b5c;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-family:Arial,sans-serif;font-weight:bold;">Order inquiry (return &amp; refund)</a></p><p style="font-size:12px;color:#8a6f6f;">No login is needed. This private link is for your order only. You will need 3 photos of the saree.</p>` : ''}
       <p style="margin-top:24px;color:#999;font-size:12px;">Track it anytime at ${SITE_URL.replace(/^https?:\/\//, '')}/track-order</p>
     </div>`,
     orderId: order.id,

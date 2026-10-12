@@ -7,11 +7,11 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-192.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
-<title>Sale — Padmora Sarees by Yashi</title>
-<meta name="description" content="Limited-time discounted sarees from Padmora — handloom Maheshwari, Ajrakh, Paithani and Narayanpet weaves at special prices.">
+<title>Sale | Padmora Sarees by Yashi</title>
+<meta name="description" content="Limited-time discounted sarees from Padmora: handloom Maheshwari, Ajrakh, Paithani and Narayanpet weaves at special prices.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Sale — Padmora Sarees by Yashi">
-<meta property="og:description" content="Limited-time discounted sarees — handloom weaves at special prices.">
+<meta property="og:title" content="Sale | Padmora Sarees by Yashi">
+<meta property="og:description" content="Limited-time discounted sarees: handloom weaves at special prices.">
 <link rel="preconnect" href="https://fxjlgsatgajagzqdokbe.supabase.co" crossorigin>
 <link rel="preload" href="/fonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/marcellus-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -111,11 +111,11 @@
         ? `Showing ${products.length} of ${total} saree${total!==1?'s':''} on sale`
         : `${total} saree${total!==1?'s':''} on sale`;
       document.getElementById('productGrid').innerHTML = products.length ? products.map(productCardHTML).join('') :
-        `<div class="empty-state" style="grid-column:1/-1;">No sarees on sale right now — check back soon.</div>`;
+        `<div class="empty-state" style="grid-column:1/-1;">No sarees are on sale right now. Please check back soon.</div>`;
       document.getElementById('loadMoreWrap').style.display = products.length < total ? '' : 'none';
     }catch(e){
       document.getElementById('resultCount').textContent = '';
-      document.getElementById('productGrid').innerHTML = `<p style="grid-column:1/-1;text-align:center;color:var(--ink-soft);">Could not load products — is the backend server running?</p>`;
+      document.getElementById('productGrid').innerHTML = `<p style="grid-column:1/-1;text-align:center;color:var(--ink-soft);">We could not load products. Please refresh the page or try again in a moment.</p>`;
       document.getElementById('loadMoreWrap').style.display = 'none';
     }
   }

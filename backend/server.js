@@ -199,7 +199,7 @@ async function productMeta(id) {
     const plain = richToPlain(p.description || (def && def.description) || '').replace(/\s+/g, ' ').trim();
     const fallback = `${p.name}: a handloom ${p.fabric} saree${colours.length ? ' in ' + colours.slice(0, 3).join(', ') : ''}, from Rs. ${def ? def.price : p.price}. Free shipping above Rs. 1,999 and easy returns from Padmora by Yashi.`;
     meta = {
-      title: `${p.name} — ${p.fabric} Saree | Padmora Sarees by Yashi`,
+      title: `${p.name} (${p.fabric} saree) | Padmora Sarees by Yashi`,
       description: (plain || fallback).slice(0, 158),
       image: photo ? photo.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + '?width=1200&quality=78&resize=contain' : ''
     };

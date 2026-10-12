@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-192.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
-<title>My Account — Padmora Sarees by Yashi</title>
+<title>My Account | Padmora Sarees by Yashi</title>
 <meta name="description" content="Manage your Padmora account: profile, saved addresses, orders, returns and reviews.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fxjlgsatgajagzqdokbe.supabase.co" crossorigin>
@@ -92,7 +92,7 @@
 
           <div id="panel-security" style="display:none;">
             <h2>How you sign in</h2>
-            <p style="font-size:14px;line-height:1.7;color:var(--ink-soft);max-width:520px;">There is no password on your Padmora account to remember or lose. Each time you log in, we e-mail a 6-digit code to <strong id="signinEmail"></strong>, and the code logs you in. Keep your e-mail account private &mdash; anyone who can read it can log in.</p>
+            <p style="font-size:14px;line-height:1.7;color:var(--ink-soft);max-width:520px;">There is no password on your Padmora account to remember or lose. Each time you log in, we e-mail a 6-digit code to <strong id="signinEmail"></strong>, and the code logs you in. Keep your e-mail account private, because anyone who can read it can log in.</p>
             <p style="font-size:13px;color:var(--ink-soft);margin-top:14px;">Need to change the e-mail address on your account? <a href="/contact" style="color:var(--maroon);text-decoration:underline;">Contact us</a>.</p>
           </div>
         </div>
@@ -248,22 +248,22 @@
   // The one-line status shown under a delivered order that has an inquiry.
   function inquiryLine(o){
     const i = o.inquiry || {};
-    const extraMsg = i.extra ? 'Our team has opened another inquiry for this order — press Order Inquiry' : '';
+    const extraMsg = i.extra ? 'Our team has opened another inquiry for this order. Press Order Inquiry.' : '';
     // decided saree by saree: say where each group of sarees stands
     if(o.returnParts && o.returnStatus !== 'Rejected'){
-      const say = { Requested: 'waiting for our team to review it', Approved: 'approved — please ship it back to us', Received: 'received — refund being processed', Refunded: 'refunded', Rejected: 'not approved' };
+      const say = { Requested: 'waiting for our team to review it', Approved: 'approved, please ship it back to us', Received: 'received, refund being processed', Refunded: 'refunded', Rejected: 'not approved' };
       const names = p => (p.orderItemIds || []).map(id => { const it = (o.items || []).find(x => x.id === id); return it ? it.name : ''; }).filter(Boolean).join(', ');
-      const lines = o.returnParts.map(p => escapeHtml(names(p) || 'Saree(s)') + ' — ' + (say[p.status] || escapeHtml(p.status))).join('<br>');
+      const lines = o.returnParts.map(p => escapeHtml(names(p) || 'Saree(s)') + ': ' + (say[p.status] || escapeHtml(p.status))).join('<br>');
       return (extraMsg ? extraMsg + '<br>' : '') + lines;
     }
     if(extraMsg) return extraMsg;
     const n = i.maxAttempts ? ` (${i.attempt || i.attemptsUsed} of ${i.maxAttempts})` : '';
     if(o.returnStatus === 'Rejected'){
-      return i.finalRejected ? 'Inquiry not approved — this was the final decision'
-        : i.eligible ? 'Inquiry not approved — you have one more chance: press Order Inquiry' : 'Inquiry not approved';
+      return i.finalRejected ? 'Inquiry not approved. This was the final decision.'
+        : i.eligible ? 'Inquiry not approved. You have one more chance: press Order Inquiry' : 'Inquiry not approved';
     }
-    return ({ Requested: 'Inquiry sent' + n + ' — waiting for our team to review it', Approved: 'Inquiry approved — please ship the saree(s) back to us',
-      Received: 'We received your saree(s) — refund being processed', Refunded: 'Refunded' })[o.returnStatus] || o.returnStatus;
+    return ({ Requested: 'Inquiry sent' + n + ', waiting for our team to review it', Approved: 'Inquiry approved. Please ship the saree(s) back to us',
+      Received: 'We received your saree(s). Your refund is being processed', Refunded: 'Refunded' })[o.returnStatus] || o.returnStatus;
   }
 
   const CANCEL_REASONS = [
@@ -307,7 +307,7 @@
             : o.cancelRequestStatus === 'Rejected' ? `<p style="font-size:12.5px;color:var(--ink-soft);margin-top:10px;">Cancellation request rejected${o.cancelAdminNote ? ': '+o.cancelAdminNote : ''}</p>` : ''}
           <div class="order-actions">
             ${o.status !== 'Cancelled' ? `<a href="/track-order?id=${o.id}" class="order-action-btn track"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>Track Order</a>` : ''}
-            ${o.cancellable && o.cancelRequestStatus !== 'Requested' ? `<button type="button" class="order-action-btn cancel" data-cancel="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Cancel Order</button>` : `${o.status !== 'Cancelled' && o.status !== 'Confirmed' && o.status !== 'Packed' ? `<span class="order-locked-note">Shipped — can no longer be cancelled</span>` : ''}`}
+            ${o.cancellable && o.cancelRequestStatus !== 'Requested' ? `<button type="button" class="order-action-btn cancel" data-cancel="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Cancel Order</button>` : `${o.status !== 'Cancelled' && o.status !== 'Confirmed' && o.status !== 'Packed' ? `<span class="order-locked-note">Shipped, so it can no longer be cancelled</span>` : ''}`}
             ${o.status === 'Delivered' && o.inquiry && o.inquiry.eligible ? `<button type="button" class="order-action-btn return" data-inquiry="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"/><path d="M12 17h.01"/></svg>Order Inquiry</button>` : ''}
           </div>
           <div id="cancelForm-${o.id}"></div>
@@ -457,15 +457,15 @@
         box.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;">No inquiries yet.</p>`;
         return;
       }
-      const label = { Requested: 'Waiting for review', Approved: 'Approved — ship it back', Received: 'Received — refund in progress', Refunded: 'Refunded', Rejected: 'Not approved' };
+      const label = { Requested: 'Waiting for review', Approved: 'Approved, please ship it back', Received: 'Received, refund in progress', Refunded: 'Refunded', Rejected: 'Not approved' };
       box.innerHTML = returns.map(r => `
         <div class="order-card">
           <div class="order-card-head">
             <span>Order #${r.orderId} · Inquiry ${r.attempt || 1} of 2 · ${new Date(r.requestedAt).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</span>
             <span class="order-status ${r.status==='Rejected'?'cancelled':''}">${label[r.status] || r.status}</span>
           </div>
-          <p style="font-size:12.5px;color:var(--ink-soft);margin:6px 0;">${escHTML(r.reasonLabel)}${r.reasonDetail ? ' — “' + escHTML(r.reasonDetail) + '”' : ''}</p>
-          ${r.items.map(li=>`<div class="order-item-row"><span>${escHTML(li.name)}${li.color ? ' — '+escHTML(li.color) : ''} × ${li.qty}</span><span>${money(li.price*li.qty)}</span></div>`).join('')}
+          <p style="font-size:12.5px;color:var(--ink-soft);margin:6px 0;">${escHTML(r.reasonLabel)}${r.reasonDetail ? ': “' + escHTML(r.reasonDetail) + '”' : ''}</p>
+          ${r.items.map(li=>`<div class="order-item-row"><span>${escHTML(li.name)}${li.color ? ' · '+escHTML(li.color) : ''} × ${li.qty}</span><span>${money(li.price*li.qty)}</span></div>`).join('')}
           ${r.photos && r.photos.length ? `<div class="return-photo-preview">${r.photos.map(p=>`<a href="${p.url}" target="_blank" rel="noopener"><img src="${p.url}" alt="Photo you sent" class="return-photo-thumb"></a>`).join('')}</div>` : ''}
           <div class="order-item-row" style="font-weight:600;color:var(--ink);border-top:1px solid rgba(173,59,92,0.1);margin-top:8px;padding-top:8px;">
             <span>${r.status === 'Refunded' ? 'Refunded' : 'Estimated refund'}</span><span>${money(r.finalRefundAmount ?? r.computedRefundAmount)}</span>
@@ -488,13 +488,13 @@
 
     const order = lastOrders.find(o => o.id === orderId);
     const refundNote = order && order.payment === 'COD'
-      ? "You chose Cash on Delivery, so no refund is needed — nothing was charged."
+      ? "You chose Cash on Delivery, so no refund is needed. Nothing was charged."
       : "Once approved, we'll process a refund to your original payment method.";
 
     mount.innerHTML = `
       <div class="return-request-panel">
         <h4>Request Cancellation</h4>
-        <p style="font-size:12px;color:var(--ink-soft);">This isn't instant — an admin reviews every cancellation request before the order is actually cancelled.</p>
+        <p style="font-size:12px;color:var(--ink-soft);">This isn't instant: an admin reviews every cancellation request before the order is actually cancelled.</p>
         <div class="form-field"><label>Reason</label>
           <select id="cancelReason-${orderId}">
             <option value="">Choose a reason…</option>
@@ -525,7 +525,7 @@
       if(!ok) return;
       try{
         await apiFetch('/orders/' + orderId + '/cancel-request', {method:'POST', body: JSON.stringify({reason, detail})});
-        toast('Cancellation request submitted — we\'ll review it shortly');
+        toast('Cancellation request submitted. We\'ll review it shortly.');
         mount.innerHTML = '';
         loadOrders();
       }catch(e){ toast(e.message, 'error'); }
@@ -541,7 +541,7 @@
     if(!panel || panel.style.display === 'none') switchTab('orders');   // already open when the link carries #orders
     for(let i = 0; i < 60 && !lastOrders.length; i++) await new Promise(r => setTimeout(r, 150));   // wait for the order list to load
     const btn = document.querySelector(`[data-review-order="${CSS.escape(orderId)}"][data-review-item="${CSS.escape(itemId)}"]`);
-    if(!btn){ toast('That saree has already been reviewed — thank you!'); return; }
+    if(!btn){ toast('That saree has already been reviewed. Thank you!'); return; }
     openReviewForm(orderId, itemId);
     const form = document.getElementById('reviewForm-' + orderId + '-' + itemId);
     if(form) form.scrollIntoView({ behavior: 'smooth', block: 'center' });

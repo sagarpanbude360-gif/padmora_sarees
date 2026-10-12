@@ -442,11 +442,11 @@ async function seedTaxonomy() {
         story: 'Woven on pit looms in Maheshwar on the banks of the Narmada, a tradition dating back to Rani Ahilyabai Holkar’s 18th-century court.' },
       { name: 'Ajrakh', slug: 'ajrakh', region: 'Ajrakhpur, Kutch', state: 'Gujarat', craft_type: 'Handcrafted', swatch: 'indigo', display_order: 1, active: true,
         short_description: 'Hand block-printed with natural indigo and madder dyes.',
-        full_description: 'Hand block-printed with natural indigo and madder dyes through a multi-day resist-printing process — a craft, not a print.',
+        full_description: 'Hand block-printed with natural indigo and madder dyes through a multi-day resist-printing process. It is a craft, not a print.',
         story: 'Each length passes through a multi-day natural-dye resist-printing process perfected over generations in Ajrakhpur, Kutch.' },
       { name: 'Paithani', slug: 'paithani', region: 'Paithan', state: 'Maharashtra', craft_type: 'Handloom', swatch: 'wine', display_order: 2, active: true,
         short_description: 'Pure silk with a hand-woven peacock-motif pallu.',
-        full_description: 'Pure silk woven with real zari, famous for its hand-woven peacock-motif pallu — once reserved for Maratha royalty and still taking over a month per piece.',
+        full_description: 'Pure silk woven with real zari, famous for its hand-woven peacock-motif pallu, once reserved for Maratha royalty and still taking over a month per piece.',
         story: 'Once reserved for Maratha royalty, a single Paithani pallu can take over a month to hand-weave with real zari.' },
       { name: 'Narayanpeth', slug: 'narayanpeth', region: 'Narayanpet', state: 'Telangana', craft_type: 'Handloom', swatch: 'maroon', display_order: 3, active: true,
         short_description: 'Checked cotton-silk body with a bold temple border.',
@@ -497,14 +497,14 @@ async function seedStorefrontContent() {
 
   if (await tableCount('faq_items') === 0) {
     const rows = [
-      ['How do I know a saree is genuinely handloom and not powerloom?', 'Every product page has a "Loom-to-You" card that names the weaver or weaving house, their region, and states plainly whether the piece is Handloom, Powerloom, or Handcrafted. We disclose powerloom pieces honestly instead of marketing them as handloom — see our Our Weaves page for more.', 'Product'],
-      ['Does the saree come with a stitched blouse?', 'Every saree ships with an unstitched matching blouse piece (0.8m), as is traditional. We don’t currently offer blouse stitching services — we recommend a trusted local tailor for the perfect fit.', 'Product'],
+      ['How do I know a saree is genuinely handloom and not powerloom?', 'Every product page has a "Loom-to-You" card that names the weaver or weaving house, their region, and states plainly whether the piece is Handloom, Powerloom, or Handcrafted. We disclose powerloom pieces honestly instead of marketing them as handloom.', 'Product'],
+      ['Does the saree come with a stitched blouse?', 'Every saree ships with an unstitched matching blouse piece (0.8m), as is traditional. We don’t currently offer blouse stitching services, so we recommend a trusted local tailor for the perfect fit.', 'Product'],
       ['What if the color looks different from the photo?', 'We photograph every saree in natural daylight to keep colors as true as possible, but screens vary. If the saree you receive doesn’t match reasonably, it qualifies for our 7-day return/exchange window, no questions asked.', 'Shipping'],
       ['What are my delivery options and timelines?', 'Standard delivery takes 4-7 business days across India. Free shipping applies on orders above ₹2,999. We currently ship only within India.', 'Shipping'],
       ['What payment methods do you accept?', 'We accept UPI (Google Pay, PhonePe, Paytm) and major debit/credit cards at checkout. We don’t currently offer Cash on Delivery.', 'Payment'],
       ['What is your return and exchange policy?', 'Unused sarees with tags intact can be returned or exchanged within 7 days of delivery. See our Shipping & Returns page for the full policy.', 'Shipping'],
-      ['Can I order in bulk?', 'Yes — message us via Contact Us and mention "Bulk Order" in the subject. Our team will follow up with a bundle discount for 5+ sarees.', 'Orders'],
-      ['How should I care for my saree?', 'Paithani, being pure silk, should be dry-cleaned only. Maheshwari, Ajrakh, and Narayanpet are cotton-silk or cotton weaves that can be gently hand-washed in cold water and dried in shade — Ajrakh especially benefits from a cold, separate first wash to set the natural dyes.', 'Care']
+      ['Can I order in bulk?', 'Yes. Message us via Contact Us and mention "Bulk Order" in the subject. Our team will follow up with a bundle discount for 5+ sarees.', 'Orders'],
+      ['How should I care for my saree?', 'Paithani, being pure silk, should be dry-cleaned only. Maheshwari, Ajrakh, and Narayanpet are cotton-silk or cotton weaves that can be gently hand-washed in cold water and dried in shade. Ajrakh especially benefits from a cold, separate first wash to set the natural dyes.', 'Care']
     ].map((r, i) => ({ question: r[0], answer: r[1], category: r[2], active: true, display_order: i }));
     must(await supabase.from('faq_items').insert(rows), 'seedStorefrontContent:faqItems');
   }
@@ -513,7 +513,7 @@ async function seedStorefrontContent() {
     await setSetting('hero_banner', {
       eyebrow: 'Handwoven · Since Generations',
       headingPre: 'Drape a story', headingEm: 'woven', headingPost: 'in silk and gold',
-      subheading: 'From the looms of Maheshwar, Paithan and Narayanpet to the hand block-printers of Kutch — discover sarees curated for weddings, festivals, and everyday elegance.',
+      subheading: 'From the looms of Maheshwar, Paithan and Narayanpet to the hand block-printers of Kutch, with sarees curated for weddings, festivals, and everyday elegance.',
       ctaText: 'Shop The Edit', ctaLink: '/shop',
       badgeLabel: 'Featured Weave', badgeValue: 'Paithani Silk',
       desktopImage: null, active: true
@@ -522,7 +522,7 @@ async function seedStorefrontContent() {
 
   if (await getSetting('promo_band', null) === null) {
     await setSetting('promo_band', {
-      eyebrow: 'Limited Time', heading: 'The Festive Sale — Up to 40% Off',
+      eyebrow: 'Limited Time', heading: 'The Festive Sale: Up to 40% Off',
       message: 'Use code {CODE} at checkout on select Paithani & Ajrakh sarees',
       couponCode: 'PADMORA40', ctaText: 'Shop The Sale', ctaLink: '/shop',
       startDate: null, endDate: null, active: true

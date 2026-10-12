@@ -7,8 +7,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-192.png">
 <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
-<title>Saree Details — Padmora Sarees by Yashi</title>
-<meta name="description" id="metaDescription" content="Handloom and heritage sarees from Padmora by Yashi — authentic weaves sourced directly from India's weaving communities.">
+<title>Saree Details | Padmora Sarees by Yashi</title>
+<meta name="description" id="metaDescription" content="Handloom and heritage sarees from Padmora by Yashi. Authentic weaves sourced directly from India's weaving communities.">
 <meta property="og:type" content="product">
 <meta property="og:title" id="ogTitle" content="Padmora Sarees by Yashi">
 <meta property="og:description" id="ogDescription" content="Handloom and heritage sarees, sourced directly from India's weaving communities.">
@@ -65,14 +65,14 @@
 <div class="size-guide-dialog prebook-dialog" id="preBookDialog" role="dialog" aria-modal="true">
   <button class="sg-close" id="preBookClose" aria-label="Close">&times;</button>
   <h3><span class="ribbon-lotus" style="color:var(--gold);display:inline-flex;width:16px;height:16px;vertical-align:-2px;margin-right:4px;"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20 C10 15 9.3 10 12 5 C14.7 10 14 15 12 20 Z"/><path d="M12 19 C8 16.5 6 13 6.6 9 C10 11 11.6 15 12 19 Z"/><path d="M12 19 C16 16.5 18 13 17.4 9 C14 11 12.4 15 12 19 Z"/><path d="M11.5 18 C7.8 16 5.3 13.3 5.7 10.3 C8.7 11.8 10.7 14.6 11.5 18 Z"/><path d="M12.5 18 C16.2 16 18.7 13.3 18.3 10.3 C15.3 11.8 13.3 14.6 12.5 18 Z"/></svg></span>Pre Book This Saree</h3>
-  <p style="margin-top:2px;">This colour is out of stock right now. Leave your email and we'll write to you the moment it's back — no payment needed today, and it's first-come, first-served once it is.</p>
+  <p style="margin-top:2px;">This colour is out of stock right now. Leave your email and we'll write to you the moment it's back. No payment is needed today, and it's first come, first served once it is.</p>
   <div class="form-field" id="preBookEmailField">
     <label>Email Address</label>
     <input type="email" id="preBookEmail" placeholder="you@example.com">
   </div>
   <div class="form-error" id="preBookError"></div>
   <button class="btn btn-primary btn-block" id="preBookSubmit" style="justify-content:center;">Notify Me When Available</button>
-  <p id="preBookSuccess" style="display:none;color:#2E7D45;font-size:13.5px;font-weight:600;margin-top:12px;">✓ You're on the list — we'll email you the moment it's back.</p>
+  <p id="preBookSuccess" style="display:none;color:#2E7D45;font-size:13.5px;font-weight:600;margin-top:12px;">✓ You're on the list. We'll email you the moment it's back.</p>
 </div>
 
 <div id="site-footer"></div>
@@ -113,17 +113,17 @@
     // colour - and so only the first photo is fetched straight away; the rest load as they are needed. A smaller copy is
     // fetched for the screen width.
     const shown = galleryPhotoWidth();
-    const base = (currentProduct ? currentProduct.name : 'Saree') + (v && v.colorName ? ' — ' + v.colorName : '');
+    const base = (currentProduct ? currentProduct.name : 'Saree') + (v && v.colorName ? ', ' + v.colorName : '');
     const items = orderedMedia(v.media);
     let imgIndex = -1;
     const slides = items.map((m, i) => {
       if (m.type === 'video') {
         // No data is used until the page has settled (see wireGallery): the poster is the main photo, so the slide is never blank.
         const poster = escHTML(sizedPhoto(items[0].url, shown, 70));
-        return `<div class="pd-flip-slide pd-video-slide" data-video="1"><video muted playsinline preload="none" data-src="${escHTML(m.url)}" poster="${poster}" aria-label="${escHTML(base + ' — video')}" disablepictureinpicture></video></div>`;
+        return `<div class="pd-flip-slide pd-video-slide" data-video="1"><video muted playsinline preload="none" data-src="${escHTML(m.url)}" poster="${poster}" aria-label="${escHTML(base + ', video')}" disablepictureinpicture></video></div>`;
       }
       imgIndex++;
-      return `<div class="pd-flip-slide${i===0?' active':''}" data-img="${imgIndex}"><img ${i===0 ? 'src' : 'data-src'}="${escHTML(sizedPhoto(m.url, shown, i===0 ? 76 : 70))}" alt="${escHTML(m.alt || (base + (images.length > 1 ? ' — photo ' + (imgIndex + 1) : '')))}" ${i===0 ? 'fetchpriority="high"' : ''} decoding="async" draggable="false"></div>`;
+      return `<div class="pd-flip-slide${i===0?' active':''}" data-img="${imgIndex}"><img ${i===0 ? 'src' : 'data-src'}="${escHTML(sizedPhoto(m.url, shown, i===0 ? 76 : 70))}" alt="${escHTML(m.alt || (base + (images.length > 1 ? ', photo ' + (imgIndex + 1) : '')))}" ${i===0 ? 'fetchpriority="high"' : ''} decoding="async" draggable="false"></div>`;
     }).join('');
     if (items.length === 1) return `<div class="pd-media-flip">${slides}</div>`;
     const dots = items.map((m, i) => `<span class="pd-media-dot${i===0?' active':''}" data-index="${i}"></span>`).join('');
@@ -310,7 +310,7 @@
     const images = variantImages(selectedVariant);
     if(!images.length || ivEl) return;
     ivReturnFocus = document.activeElement;
-    const alt = (currentProduct ? currentProduct.name : 'Saree') + (selectedVariant && selectedVariant.colorName ? ' — ' + selectedVariant.colorName : '');
+    const alt = (currentProduct ? currentProduct.name : 'Saree') + (selectedVariant && selectedVariant.colorName ? ', ' + selectedVariant.colorName : '');
     ivEl = document.createElement('div');
     ivEl.className = 'iv';
     ivEl.setAttribute('role', 'dialog');
@@ -327,7 +327,7 @@
         </div>
       </div>
       <div class="iv-scroll" tabindex="0">
-        ${images.map((m, i) => `<div class="iv-frame"><img src="${escHTML(m.url)}" alt="${escHTML(m.alt || (alt + ' — photo ' + (i + 1) + ' of ' + images.length))}" draggable="false" decoding="async"${i > startIndex + 1 ? ' loading="lazy"' : ''}></div>`).join('')}
+        ${images.map((m, i) => `<div class="iv-frame"><img src="${escHTML(m.url)}" alt="${escHTML(m.alt || (alt + ', photo ' + (i + 1) + ' of ' + images.length))}" draggable="false" decoding="async"${i > startIndex + 1 ? ' loading="lazy"' : ''}></div>`).join('')}
       </div>`;
     document.body.appendChild(ivEl);
     document.documentElement.classList.add('iv-open');
@@ -556,8 +556,8 @@
   }
   function updateProductSEO(p, variant){
     const desc = descPlain(variant.desc || p.desc || '').slice(0, 155);
-    document.getElementById('metaDescription').setAttribute('content', desc || `${p.name} — ${p.fabric} saree from Padmora by Yashi.`);
-    document.getElementById('ogTitle').setAttribute('content', p.name + ' — Padmora Sarees by Yashi');
+    document.getElementById('metaDescription').setAttribute('content', desc || `${p.name} (${p.fabric} saree) from Padmora by Yashi.`);
+    document.getElementById('ogTitle').setAttribute('content', p.name + ' | Padmora Sarees by Yashi');
     document.getElementById('ogDescription').setAttribute('content', desc);
     const media = variant.media && (variant.media.find(m=>m.isPrimary) || variant.media[0]);
     if(media && media.type === 'image') document.getElementById('ogImage').setAttribute('content', new URL(media.url, window.location.href).href);
@@ -591,7 +591,7 @@
     selectedVariant = variants.find(v => v.isDefault) || variants[0];
 
     document.getElementById('crumbName').textContent = p.name;
-    document.title = p.name + ' — Padmora Sarees by Yashi';
+    document.title = p.name + ' | Padmora Sarees by Yashi';
     updateProductSEO(p, selectedVariant);
 
     document.getElementById('pdWrap').innerHTML = `
@@ -687,7 +687,7 @@
     document.getElementById('pdPrice').innerHTML = `
       <span class="price-now">${money(v.price)}</span>${priceExtrasHTML(currentProduct, v)}`;
     document.getElementById('pdDesc').innerHTML = descHTML(v.desc || currentProduct.desc);
-    document.getElementById('pdShadeLabel').textContent = ' — ' + v.colorName;
+    document.getElementById('pdShadeLabel').textContent = ': ' + v.colorName;
     const noteEl = document.getElementById('pdStockNote');
     // Stock is not shown on the page, except "only 2 / 3 left" and "out of stock" (see stockNote in api.js).
     const note = stockNote(v.stock, v.colorName);
@@ -1053,7 +1053,7 @@
       document.getElementById('preBookSubmit').style.display = 'none';
       document.getElementById('preBookEmailField').style.display = 'none';
       document.getElementById('preBookSuccess').style.display = 'block';
-      toast("You're on the list — we'll email you when it's back");
+      toast("You're on the list. We'll email you when it's back.");
     }catch(e){
       errBox.textContent = e.message;
       errBox.classList.add('show');

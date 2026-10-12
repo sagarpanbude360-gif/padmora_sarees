@@ -43,7 +43,7 @@ router.post('/', async (req, res) => {
       name, email, subject: subject || 'General enquiry', message, order_id, created_at: new Date().toISOString()
     }), 'postContact');
 
-    res.status(201).json({ message: 'Thanks for reaching out — our team will get back to you within 24 hours.' });
+    res.status(201).json({ message: 'Thanks for reaching out. Our team will get back to you within 24 hours.' });
   } catch (err) {
     console.error('POST /contact failed:', err);
     res.status(500).json({ message: 'Something went wrong on the server.' });

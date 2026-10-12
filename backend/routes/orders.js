@@ -107,7 +107,7 @@ async function resolvePricedLineItems(rawItems) {
     const price = variant ? variant.price : product.price;
     const colorLabel = variant ? variant.color_name : item.color;
     if (stock < item.qty) {
-      throw new OrderError(409, `Only ${stock} left of "${product.name}"${variant ? ' in ' + variant.color_name : ''} — please update your bag.`);
+      throw new OrderError(409, `Only ${stock} left of "${product.name}"${variant ? ' in ' + variant.color_name : ''} . Please update your bag.`);
     }
     lineItems.push({ productId: item.product_id, variantId: item.variant_id || null, name: product.name, color: colorLabel, qty: item.qty, price });
   }
@@ -222,7 +222,7 @@ function validateCancelReason(body) {
   const known = CANCEL_REASONS.find(r => r.key === reason);
   if (!known) return { error: 'Choose a valid reason for cancelling.' };
   const cleanDetail = String(detail || '').trim().slice(0, 500);
-  if (reason === 'other' && !cleanDetail) return { error: "Add a short note explaining why — required for \"Other\"." };
+  if (reason === 'other' && !cleanDetail) return { error: "Please add a short note explaining why. It is required for \"Other\"." };
   return { reason, detail: cleanDetail || null };
 }
 

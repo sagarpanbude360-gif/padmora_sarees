@@ -164,7 +164,7 @@ async function notifySubmitted(order, userId, request, state) {
       html: `<div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;color:#2b1015;">
         <h2 style="color:#7A1F2B;">We received your inquiry</h2>
         <p>Hi ${esc(first)},</p>
-        <p>Thank you &mdash; your inquiry for order <strong>${esc(order.id)}</strong> is with our team${state.secondChance ? ' (this is your second and last chance)' : ''}. We will look at your photos and reply by e-mail, usually within 1&ndash;2 working days.</p>
+        <p>Thank you. Your inquiry for order <strong>${esc(order.id)}</strong> is with our team${state.secondChance ? ' (this is your second and last chance)' : ''}. We will look at your photos and reply by e-mail, usually within 1&ndash;2 working days.</p>
         <p style="font-size:13px;color:#6f5a5c;">You can follow it any time here: <a href="${esc(inquiryLink(order.id))}" style="color:#7A1F2B;">${esc(inquiryLink(order.id))}</a></p>
       </div>`
     });
@@ -192,14 +192,14 @@ function decisionEmail({ approve, name, orderId, adminNote, attempt, itemsText, 
     <h2 style="color:#7A1F2B;">${approve ? 'Return approved' : 'Update on your inquiry'}</h2>
     <p>Hi ${esc(first)},</p>
     <p>${approve
-      ? `Your inquiry for order <strong>${esc(orderId)}</strong>${forItems} has been approved. Please ship the item(s) back to us &mdash; we will e-mail you again once we have received and inspected them, and then send your refund.`
-      : `We are sorry &mdash; we are not able to approve your inquiry for order <strong>${esc(orderId)}</strong>${forItems}.`}</p>
+      ? `Your inquiry for order <strong>${esc(orderId)}</strong>${forItems} has been approved. Please ship the item(s) back to us. We will e-mail you again once we have received and inspected them, and then send your refund.`
+      : `We are sorry, we are not able to approve your inquiry for order <strong>${esc(orderId)}</strong>${forItems}.`}</p>
     ${adminNote ? `<p style="color:#6f5a5c;">Note from our team: ${esc(adminNote)}</p>` : ''}
-    ${again ? `<p>You have <strong>one more chance</strong>. If something was missing &mdash; clearer photos, a fuller description &mdash; you can send a new inquiry here:</p>
+    ${again ? `<p>You have <strong>one more chance</strong>. If something was missing, such as clearer photos or a fuller description, you can send a new inquiry here:</p>
     <p><a href="${esc(inquiryLink(orderId))}" style="display:inline-block;background:#ad3b5c;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-family:Arial,sans-serif;font-weight:bold;">Send my second inquiry</a></p>
     <p style="font-size:12px;color:#8a6f6f;">It is available for 7 days. After that second inquiry, our decision is final.</p>` : ''}
     ${!approve && !again && everyPartRejected ? `<p style="color:#6f5a5c;">This was your second inquiry for this order, so we cannot take it further here. If you think we have got something wrong, just reply to this e-mail.</p>` : ''}
-    ${!approve ? `<p style="font-size:13px;color:#6f5a5c;">Questions about this decision, or need us to look again? <a href="${esc(contactLink(orderId))}" style="color:#7A1F2B;">Contact us about order ${esc(orderId)}</a> &mdash; the order number is filled in for you, and we can open another inquiry for you if it is needed.</p>` : ''}
+    ${!approve ? `<p style="font-size:13px;color:#6f5a5c;">Questions about this decision, or need us to look again? <a href="${esc(contactLink(orderId))}" style="color:#7A1F2B;">Contact us about order ${esc(orderId)}</a>. The order number is filled in for you, and we can open another inquiry for you if it is needed.</p>` : ''}
   </div>`;
   return { subject, html };
 }
