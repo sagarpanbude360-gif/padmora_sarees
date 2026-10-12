@@ -22,6 +22,14 @@ function secretProblem(value) {
   return null;
 }
 
+// Debug output is opt-in locally and is never permitted on a public deployment.
+function otpDebugRequested() {
+  return /^(1|true|yes|on)$/i.test(String(process.env.OTP_DEBUG_LOG || '').trim());
+}
+function otpDebugEnabled() {
+  return !isProduction() && otpDebugRequested();
+}
+
 let devSecret = null;
 function jwtSecret() {
   const value = process.env.JWT_SECRET;
@@ -41,7 +49,7 @@ function checkConfig() {
   const p = secretProblem(process.env.JWT_SECRET);
   if (p) (prod ? errors : warnings).push('JWT_SECRET ' + p + ' (use a long random value, 32+ characters)');
   else if (String(process.env.JWT_SECRET).length < 32) warnings.push('JWT_SECRET is shorter than 32 characters: replace it with a longer random value when convenient (this signs out everyone once)');
-  if (prod && process.env.OTP_DEBUG_LOG) errors.push('OTP_DEBUG_LOG is on: it prints every login code into the server log. Remove it.');
+  if (prod && otpDebugRequested()) warnings.push('OTP_DEBUG_LOG is ignored in production; login codes will not be logged. Remove this setting.');
   if (prod) {
     if (!process.env.SITE_URL) warnings.push('SITE_URL is not set (e-mail links and the sitemap fall back to the request address)');
     const key = String(process.env.RAZORPAY_KEY_ID || '');
@@ -62,4 +70,4 @@ function assertConfig() {
   return r;
 }
 
-module.exports = { jwtSecret, isProduction, secretProblem, checkConfig, assertConfig, KNOWN_WEAK };
+module.exports = { jwtSecret, isProduction, secretProblem, checkConfig, assertConfig, KNOWN_WEAK, otpDebugEnabled };

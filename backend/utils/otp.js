@@ -4,6 +4,7 @@
 // only its bcrypt hash, same as a real password, so a DB leak doesn't hand
 // out live codes.
 const crypto = require('crypto');
+const { otpDebugEnabled } = require('./secrets');
 const bcrypt = require('bcryptjs');
 const { supabase, must } = require('./db');
 
@@ -36,7 +37,7 @@ async function createOtp(email, purpose) {
     email: normalizedEmail, purpose, code_hash: codeHash,
     expires_at: new Date(Date.now() + CODE_TTL_MS).toISOString(), created_at: new Date().toISOString()
   }), 'createOtp:insert');
-  if (process.env.OTP_DEBUG_LOG) console.log(`[OTP_DEBUG_LOG] ${purpose} code for ${normalizedEmail}: ${code}`);
+  if (otpDebugEnabled()) console.log(`[OTP_DEBUG_LOG] ${purpose} code for ${normalizedEmail}: ${code}`);
   return code;
 }
 
