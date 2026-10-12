@@ -2900,7 +2900,7 @@
 
   // `prep` lets a wide picture keep more of its size and detail: the homepage banner is shown across the whole screen, so the usual
   // 1600 px limit (right for a saree photo or a circle) made it look soft.
-  // Tells you, the moment a picture is chosen, whether it is big enough to look sharp. A picture smaller than the size it is shown at is
+  // Tells you, the moment a picture is chosen, whether it meets the width guideline. A picture smaller than the size it is shown at is
   // stretched by the browser, which is what makes it look soft or torn; no setting on the site can add detail that is not in the file.
   const PICTURE_MIN_WIDTH = { hImgDesktop: 2400, hImgMobile: 1080, fThumbUpload: 600, cThumbUpload: 1200, cBannerUpload: 2000 };
   document.addEventListener('change', async e => {
@@ -2915,12 +2915,12 @@
       note.style.color = small ? '#b45309' : 'var(--teal)';
       note.textContent = small
         ? `⚠ This picture is ${w} × ${h} px, smaller than the ${need} px wide it needs to look sharp on large screens. It will look soft. Please choose a bigger picture (at least ${need} px wide).`
-        : `✓ ${w} × ${h} px: big enough to look sharp.`;
+        : `✓ ${w} × ${h} px: meets the width guideline. Check the original at full size; pixel dimensions alone do not guarantee sharp detail.`;
     }catch(_){ note.textContent = ''; }
   });
 
   async function uploadEntityImage(url, fieldName, file, extra, prep){
-    file = await prepareImageForUpload(file, prep && prep.maxDim, prep && prep.quality);
+    if(!(prep && prep.preserveOriginal)) file = await prepareImageForUpload(file, prep && prep.maxDim, prep && prep.quality);
     const fd = new FormData();
     fd.append('file', file);
     if(extra) Object.entries(extra).forEach(([k,v])=>fd.append(k,v));
@@ -3416,10 +3416,10 @@
     if(!heroLinkOpts.some(o => o.v === heroCurLink)) heroLinkOpts.push({v: heroCurLink, l: 'Custom link: ' + heroCurLink});
     body.innerHTML = `
       <div class="editor-card">
-        <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;">The big image at the top of the homepage. The whole image is clickable and zooms slightly on hover; the button sits in the centre.</p>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;">The homepage banner shows the whole image in its original proportions. Its height follows the image. The image and button open the selected link. Upload a crisp WebP, PNG or JPEG, ideally under 2 MB; the original file is preserved.</p>
         <div class="form-row-2">
-          <div class="form-field"><label>Desktop Image (wide: 2560×720 fits the banner exactly, 2400×1000 also works)</label><input type="file" accept="image/*" id="hImgDesktop">${h.desktopImage?`<img src="${h.desktopImage}" style="height:70px;margin-top:8px;border-radius:4px;">`:''}</div>
-          <div class="form-field"><label>Mobile Image (optional, tall, e.g. 1080×1350)</label><input type="file" accept="image/*" id="hImgMobile">${h.mobileImage?`<img src="${h.mobileImage}" style="height:70px;margin-top:8px;border-radius:4px;">`:'<span style="display:block;font-size:11.5px;color:var(--ink-soft);margin-top:6px;">Not set — the desktop image is used on phones too.</span>'}</div>
+          <div class="form-field"><label>Desktop Image (2560×720 for a shallow banner; 2560×1280 for a taller 2:1 banner)</label><input type="file" accept="image/*" id="hImgDesktop">${h.desktopImage?`<img src="${h.desktopImage}" style="height:70px;margin-top:8px;border-radius:4px;">`:''}</div>
+          <div class="form-field"><label>Mobile Image (optional: 1080×1350 portrait or 1080×562 landscape)</label><input type="file" accept="image/*" id="hImgMobile">${h.mobileImage?`<img src="${h.mobileImage}" style="height:70px;margin-top:8px;border-radius:4px;">`:'<span style="display:block;font-size:11.5px;color:var(--ink-soft);margin-top:6px;">Not set — the desktop image is used on phones too.</span>'}</div>
         </div>
         <div class="form-row-2">
           <div class="form-field"><label>Button Text</label><input id="hCtaText" value="${h.ctaText||''}" placeholder="Shop All Sarees"></div>
@@ -3429,15 +3429,10 @@
 
         <div class="hpv" id="heroPv">
           <h4>How it will look on your website</h4>
-          <p class="hpv-note">Updates as you choose a picture, type the button text or move the sliders — nothing is published until you press <strong>Save Hero</strong>. On computers and tablets the banner is a wide strip, so part of the picture is trimmed: <strong>drag the picture</strong> in the computer (or phone) preview, or use the sliders, to choose what stays in view.</p>
+          <p class="hpv-note">Updates as you choose a picture or type the button text. Nothing is published until you press <strong>Save Hero</strong>. Both previews show the full image without cropping or stretching. A separate mobile image can make small text easier to read. Leave clear space for the button shown in each preview.</p>
           <div class="hpv-stage">
             <div class="hpv-col desk"><div class="hpv-cap">On a computer</div><div class="hpv-frame desk" id="hpvDesk"></div></div>
             <div class="hpv-col phone"><div class="hpv-cap">On a phone</div><div class="hpv-frame phone" id="hpvPhone"></div></div>
-          </div>
-          <div class="hpv-controls">
-            <div><label for="hFocusY">Keep in view — up / down: <strong id="hFocusYv"></strong></label><input type="range" id="hFocusY" min="0" max="100" step="1"></div>
-            <div><label for="hFocusX">Keep in view — left / right: <strong id="hFocusXv"></strong></label><input type="range" id="hFocusX" min="0" max="100" step="1"></div>
-            <div><label for="hFocusMX">Phone — keep in view — left / right: <strong id="hFocusMXv"></strong></label><input type="range" id="hFocusMX" min="0" max="100" step="1"></div>
           </div>
           <div class="hpv-info" id="hpvInfo"></div>
         </div>
@@ -3454,21 +3449,17 @@
     const deskFrame = document.getElementById('hpvDesk'), phoneFrame = document.getElementById('hpvPhone');
     function fitPreview(){
       const dInner = deskFrame.querySelector('.hpv-inner');
-      if(dInner){ const k = deskFrame.clientWidth / 1366; dInner.style.transform = 'scale(' + k + ')'; deskFrame.style.height = (384 * k) + 'px'; }
+      if(dInner){ const k = deskFrame.clientWidth / 1366; dInner.style.transform = 'scale(' + k + ')'; deskFrame.style.height = (dInner.offsetHeight * k) + 'px'; }
       const pInner = phoneFrame.querySelector('.hpv-inner');
       if(pInner){ const k = 0.72; pInner.style.transform = 'scale(' + k + ')'; phoneFrame.style.width = (390 * k) + 'px'; phoneFrame.style.height = (pInner.offsetHeight * k) + 'px'; }
     }
     function paintPreview(){
-      document.getElementById('hFocusY').value = pv.fy; document.getElementById('hFocusX').value = pv.fx;
-      document.getElementById('hFocusYv').textContent = Math.round(pv.fy) + '%'; document.getElementById('hFocusXv').textContent = Math.round(pv.fx) + '%';
-      document.getElementById('hFocusMX').value = pv.mfx; document.getElementById('hFocusMXv').textContent = Math.round(pv.mfx) + '%';
-      const desk = pv.desk;
+      const desk = pv.desk || pv.mob;
       deskFrame.innerHTML = `<div class="hpv-inner desk"><div class="hpv-hero">${desk ? `<img class="hpv-img" alt="" src="${heroAttr(desk)}" style="object-position:${pv.fx}% ${pv.fy}%">` : `<div class="hpv-empty">No picture yet</div>`}<span class="hpv-btn"><span>${btnLabel()}</span><i>${ARROW}</i></span></div></div>`;
       const phonePic = pv.mob || pv.desk;
       phoneFrame.innerHTML = `<div class="hpv-inner phone"><div class="hpv-hero">${phonePic ? `<img class="hpv-img natural" alt="" src="${heroAttr(phonePic)}" style="object-position:${pv.mfx}% 50%">` : `<div class="hpv-empty">No picture yet</div>`}<span class="hpv-btn"><span>${btnLabel()}</span><i>${ARROW}</i></span></div></div>`;
       fitPreview();
-      const imgM = phoneFrame.querySelector('img');
-      if(imgM) imgM.addEventListener('load', fitPreview, { once:true });
+      [deskFrame, phoneFrame].forEach(frame => { const img = frame.querySelector('img'); if(img) img.addEventListener('load', fitPreview, { once:true }); });
     }
     function describePicture(){
       const el = document.getElementById('hpvInfo');
@@ -3478,8 +3469,8 @@
       const parts = [`Computer picture: ${d.w} × ${d.h}px` + (d.kb ? ` · ${d.kb >= 1024 ? (d.kb / 1024).toFixed(1) + ' MB' : d.kb + ' KB'}` : '')];
       const warn = [];
       if(d.w < 1600) warn.push('it is narrower than 1600px, so it may look soft on large screens');
-      if(d.w / d.h < 3.2) warn.push('it is much taller than the banner strip, so a large part is trimmed — use the sliders or drag to choose what stays');
-      if(d.kb && d.kb > 6000) warn.push('the file is very large and will load slowly (it is resized automatically, but a smaller file is better)');
+      if(d.w / d.h < 3.2) parts.push(' · Full image shown; this artwork makes a taller banner.');
+      if(d.kb && d.kb > 6000) warn.push('the file is very large and will load slowly (the original is preserved; export an optimised WebP before uploading)');
       el.className = 'hpv-info' + (warn.length ? ' warn' : '');
       el.textContent = parts.join('') + (warn.length ? ' — heads up: ' + warn.join('; ') + '.' : ' — a good size.');
     }
@@ -3497,42 +3488,6 @@
     document.getElementById('hImgDesktop').addEventListener('change', e => { const f = e.target.files[0]; if(f) setPicture('desk', f); });
     document.getElementById('hImgMobile').addEventListener('change', e => { const f = e.target.files[0]; if(f) setPicture('mob', f); });
     document.getElementById('hCtaText').addEventListener('input', () => { deskFrame.querySelectorAll('.hpv-btn > span').forEach(n => { n.textContent = document.getElementById('hCtaText').value.trim() || 'Shop All Sarees'; }); phoneFrame.querySelectorAll('.hpv-btn > span').forEach(n => { n.textContent = document.getElementById('hCtaText').value.trim() || 'Shop All Sarees'; }); });
-    const setFocus = (fx, fy) => {
-      pv.fx = Math.min(100, Math.max(0, fx)); pv.fy = Math.min(100, Math.max(0, fy));
-      document.getElementById('hFocusY').value = pv.fy; document.getElementById('hFocusX').value = pv.fx;
-      document.getElementById('hFocusYv').textContent = Math.round(pv.fy) + '%'; document.getElementById('hFocusXv').textContent = Math.round(pv.fx) + '%';
-      const im = deskFrame.querySelector('.hpv-img'); if(im) im.style.objectPosition = pv.fx + '% ' + pv.fy + '%';
-    };
-    const setMFocus = v => {
-      pv.mfx = Math.min(100, Math.max(0, v));
-      document.getElementById('hFocusMX').value = pv.mfx; document.getElementById('hFocusMXv').textContent = Math.round(pv.mfx) + '%';
-      const im = phoneFrame.querySelector('.hpv-img'); if(im) im.style.objectPosition = pv.mfx + '% 50%';
-    };
-    document.getElementById('hFocusMX').addEventListener('input', e => setMFocus(Number(e.target.value)));
-    // drag the phone picture sideways (only a picture wider than the phone banner can move)
-    phoneFrame.addEventListener('pointerdown', e => {
-      const im = phoneFrame.querySelector('.hpv-img'); if(!im || !im.naturalWidth) return;
-      const k = 0.72, boxH = Math.max(390 * im.naturalHeight / im.naturalWidth, 203), s0 = Math.max(390 / im.naturalWidth, boxH / im.naturalHeight);
-      const ox = im.naturalWidth * s0 - 390; if(ox <= 1) return;
-      const x0 = e.clientX, m0 = pv.mfx;
-      phoneFrame.classList.add('dragging'); phoneFrame.setPointerCapture(e.pointerId);
-      const move = ev => setMFocus(m0 - ((ev.clientX - x0) / k) / ox * 100);
-      const up = () => { phoneFrame.classList.remove('dragging'); phoneFrame.removeEventListener('pointermove', move); phoneFrame.removeEventListener('pointerup', up); phoneFrame.removeEventListener('pointercancel', up); };
-      phoneFrame.addEventListener('pointermove', move); phoneFrame.addEventListener('pointerup', up); phoneFrame.addEventListener('pointercancel', up);
-    });
-    document.getElementById('hFocusY').addEventListener('input', e => setFocus(pv.fx, Number(e.target.value)));
-    document.getElementById('hFocusX').addEventListener('input', e => setFocus(Number(e.target.value), pv.fy));
-    // drag the picture inside the computer preview to choose what stays in view
-    deskFrame.addEventListener('pointerdown', e => {
-      const im = deskFrame.querySelector('.hpv-img'); if(!im || !im.naturalWidth) return;
-      const k = deskFrame.clientWidth / 1366, s0 = Math.max(1366 / im.naturalWidth, 384 / im.naturalHeight);
-      const ox = im.naturalWidth * s0 - 1366, oy = im.naturalHeight * s0 - 384;
-      const x0 = e.clientX, y0 = e.clientY, fx0 = pv.fx, fy0 = pv.fy;
-      deskFrame.classList.add('dragging'); deskFrame.setPointerCapture(e.pointerId);
-      const move = ev => setFocus(ox > 1 ? fx0 - ((ev.clientX - x0) / k) / ox * 100 : fx0, oy > 1 ? fy0 - ((ev.clientY - y0) / k) / oy * 100 : fy0);
-      const up = () => { deskFrame.classList.remove('dragging'); deskFrame.removeEventListener('pointermove', move); deskFrame.removeEventListener('pointerup', up); deskFrame.removeEventListener('pointercancel', up); };
-      deskFrame.addEventListener('pointermove', move); deskFrame.addEventListener('pointerup', up); deskFrame.addEventListener('pointercancel', up);
-    });
     if(window.ResizeObserver) new ResizeObserver(fitPreview).observe(deskFrame); else window.addEventListener('resize', fitPreview);
     paintPreview();
     if(pv.desk) measure(pv.desk, 0);
@@ -3558,8 +3513,8 @@
         })});
         const desktop = document.getElementById('hImgDesktop').files[0];
         const mobile = document.getElementById('hImgMobile').files[0];
-        if(desktop) await uploadEntityImage('/api/admin/content/hero/image', 'file', desktop, {slot:'desktop'}, { maxDim: 2560, quality: 0.9 });
-        if(mobile) await uploadEntityImage('/api/admin/content/hero/image', 'file', mobile, {slot:'mobile'}, { maxDim: 1600, quality: 0.9 });
+        if(desktop) await uploadEntityImage('/api/admin/content/hero/image', 'file', desktop, {slot:'desktop'}, { preserveOriginal: true });
+        if(mobile) await uploadEntityImage('/api/admin/content/hero/image', 'file', mobile, {slot:'mobile'}, { preserveOriginal: true });
         toast('Hero banner saved');
         renderHeroAdmin();
       }catch(e){ toast(e.message, 'error'); }
