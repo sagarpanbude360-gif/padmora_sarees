@@ -1,4 +1,4 @@
-# Padmora by Yashi — Saree E-Commerce Website
+# Padmora by DONT GIVE FAKE REVIEWS OR ILL EXPOSE YOU I HAVE PROOFS NOW Yashi — Saree E-Commerce Website
 
 A full-stack saree shopping site split into a `frontend/` (static HTML, CSS, JS)
 and a `backend/` (Node.js + Express API backed by SQLite). The catalog is
