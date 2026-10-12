@@ -2900,6 +2900,25 @@
 
   // `prep` lets a wide picture keep more of its size and detail: the homepage banner is shown across the whole screen, so the usual
   // 1600 px limit (right for a saree photo or a circle) made it look soft.
+  // Tells you, the moment a picture is chosen, whether it is big enough to look sharp. A picture smaller than the size it is shown at is
+  // stretched by the browser, which is what makes it look soft or torn; no setting on the site can add detail that is not in the file.
+  const PICTURE_MIN_WIDTH = { hImgDesktop: 2400, hImgMobile: 1080, fThumbUpload: 600, cThumbUpload: 1200, cBannerUpload: 2000 };
+  document.addEventListener('change', async e => {
+    const input = e.target, need = input && PICTURE_MIN_WIDTH[input.id];
+    if(!need || !input.files || !input.files[0]) return;
+    let note = input.parentNode.querySelector('.pic-check');
+    if(!note){ note = document.createElement('div'); note.className = 'pic-check'; note.style.cssText = 'font-size:12px;margin-top:6px;'; input.insertAdjacentElement('afterend', note); }
+    try{
+      const bmp = await createImageBitmap(input.files[0]);
+      const w = bmp.width, h = bmp.height; bmp.close();
+      const small = w < need;
+      note.style.color = small ? '#b45309' : 'var(--teal)';
+      note.textContent = small
+        ? `⚠ This picture is ${w} × ${h} px, smaller than the ${need} px wide it needs to look sharp on large screens. It will look soft. Please choose a bigger picture (at least ${need} px wide).`
+        : `✓ ${w} × ${h} px: big enough to look sharp.`;
+    }catch(_){ note.textContent = ''; }
+  });
+
   async function uploadEntityImage(url, fieldName, file, extra, prep){
     file = await prepareImageForUpload(file, prep && prep.maxDim, prep && prep.quality);
     const fd = new FormData();
